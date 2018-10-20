@@ -2,6 +2,7 @@ module Demo.Chips exposing (Model, Msg(..), defaultModel, update, view)
 
 import Demo.Page as Page exposing (Page)
 import Html exposing (Html, text)
+import Html.Attributes as Html
 import Material
 import Material.Chip as Chip
 import Material.Options as Options exposing (cs, css, styled, when)
@@ -21,8 +22,7 @@ defaultModel =
     { mdc = Material.defaultModel
     , selectedChips =
         Set.fromList
-            [ "chips-choice-medium"
-            , "chips-filter-chips-tops"
+            [ "chips-filter-chips-tops"
             , "chips-filter-chips-bottoms"
             , "chips-filter-chips-alice"
             ]
@@ -67,21 +67,60 @@ update lift msg model =
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    page.body "Chips"
-        [ Page.hero []
+    page.demoPage
+        { title = "Chips"
+        , prelude =
+            [ """
+              Chips are compact elements that allow users to enter information,
+              select a choice, filter content, or trigger an action.
+              """
+            ]
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
             [ heroChips lift model
             ]
-        , styled Html.div
-            [ cs "demo-wrapper"
-            , css "padding" "48px"
+        , content =
+            [ styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Choice Chips" ]
+            , choiceChips lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Filter Chips" ]
+            , styled Html.h3
+                [ Typography.body2 ]
+                [ text "No leading icon" ]
+            , filterChipsNoLeadingIcon lift model
+            , styled Html.h3
+                [ Typography.body2 ]
+                [ text "With leading icon" ]
+            , filterChipsWithLeadingIcon lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Action Chips" ]
+            , actionChips lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Shaped Chips" ]
+            , shapedChips lift model
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
             ]
-            (List.concat
-                [ choiceChips lift model
-                , filterChips lift model
-                , actionChips lift model
-                ]
-            )
-        ]
+        }
+
+
+style : String
+style =
+    """
+    .demo-chip--shaped {
+      border-radius: 4px;
+    }
+    """
 
 
 heroChips : (Msg m -> m) -> Model m -> Html m
@@ -114,7 +153,7 @@ heroChips lift model =
         ]
 
 
-choiceChips : (Msg m -> m) -> Model m -> List (Html m)
+choiceChips : (Msg m -> m) -> Model m -> Html m
 choiceChips lift model =
     let
         chip index label =
@@ -127,12 +166,7 @@ choiceChips lift model =
                 [ text label
                 ]
     in
-    [ styled Html.h2
-        [ Typography.subheading1
-        ]
-        [ text "Choice Chips"
-        ]
-    , Chip.chipset
+    Chip.chipset
         [ Chip.choice
         ]
         [ chip "chips-choice-extra-small" "Extra Small"
@@ -141,20 +175,11 @@ choiceChips lift model =
         , chip "chips-choice-large" "Large"
         , chip "chips-choice-extra-large" "Extra Large"
         ]
-    ]
 
 
-filterChips : (Msg m -> m) -> Model m -> List (Html m)
-filterChips lift model =
-    [ styled Html.h2
-        [ Typography.subheading1
-        ]
-        [ text "Filter Chips"
-        ]
-    , styled Html.h3
-        [ Typography.body2 ]
-        [ text "No leading icon" ]
-    , let
+filterChipsNoLeadingIcon : (Msg m -> m) -> Model m -> Html m
+filterChipsNoLeadingIcon lift model =
+    let
         chip index label =
             Chip.view (lift << Mdc)
                 index
@@ -164,8 +189,8 @@ filterChips lift model =
                 ]
                 [ text label
                 ]
-      in
-      Chip.chipset
+    in
+    Chip.chipset
         [ Chip.filter
         ]
         [ chip "chips-filter-chips-tops" "Tops"
@@ -173,10 +198,11 @@ filterChips lift model =
         , chip "chips-filter-chips-shoes" "Shoes"
         , chip "chips-filter-chips-accessories" "Accessories"
         ]
-    , styled Html.h3
-        [ Typography.body2 ]
-        [ text "With leading icon" ]
-    , let
+
+
+filterChipsWithLeadingIcon : (Msg m -> m) -> Model m -> Html m
+filterChipsWithLeadingIcon lift model =
+    let
         chip index label =
             Chip.view (lift << Mdc)
                 index
@@ -188,17 +214,16 @@ filterChips lift model =
                 ]
                 [ text label
                 ]
-      in
-      Chip.chipset []
+    in
+    Chip.chipset []
         [ chip "chips-filter-chips-alice" "Alice"
         , chip "chips-filter-chips-bob" "Bob"
         , chip "chips-filter-chips-charlie" "Charlie"
         , chip "chips-filter-chips-danielle" "Danielle"
         ]
-    ]
 
 
-actionChips : (Msg m -> m) -> Model m -> List (Html m)
+actionChips : (Msg m -> m) -> Model m -> Html m
 actionChips lift model =
     let
         chip index ( leadingIcon, label ) =
@@ -211,15 +236,30 @@ actionChips lift model =
                 [ text label
                 ]
     in
-    [ styled Html.h2
-        [ Typography.subheading1
-        ]
-        [ text "Action Chips"
-        ]
-    , Chip.chipset []
+    Chip.chipset []
         [ chip "chips-action-chips-add-to-calendar" ( "event", "Add to calendar" )
         , chip "chips-action-chips-bookmark" ( "bookmark", "Bookmark" )
         , chip "chips-action-chips-set-alarm" ( "alarm", "Set alarm" )
         , chip "chips-action-chips-get-directions" ( "directions", "Get directions" )
         ]
-    ]
+
+
+shapedChips : (Msg m -> m) -> Model m -> Html m
+shapedChips lift model =
+    let
+        chip index label =
+            Chip.view (lift << Mdc)
+                index
+                model.mdc
+                [ Chip.onClick (lift (ToggleChip Action index))
+                , cs "demo-chip--shaped"
+                ]
+                [ text label
+                ]
+    in
+    Chip.chipset []
+        [ chip "chips-action-chips-add-to-calendar" "Bookcase"
+        , chip "chips-action-chips-bookmark" "TV Stand"
+        , chip "chips-action-chips-set-alarm" "Sofas"
+        , chip "chips-action-chips-get-directions" "Office chairs"
+        ]
