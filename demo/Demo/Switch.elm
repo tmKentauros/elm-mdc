@@ -7,25 +7,26 @@ import Material
 import Material.FormField as FormField
 import Material.Options as Options exposing (cs, css, styled, when)
 import Material.Switch as Switch
+import Material.Typography as Typography
 import Platform.Cmd exposing (Cmd, none)
 
 
 type alias Model m =
     { mdc : Material.Model m
-    , switches : Dict Material.Index Bool
+    , states : Dict String Bool
     }
 
 
 defaultModel : Model m
 defaultModel =
     { mdc = Material.defaultModel
-    , switches = Dict.empty
+    , states = Dict.empty
     }
 
 
 type Msg m
     = Mdc (Material.Msg m)
-    | Toggle Material.Index
+    | SwitchClicked Material.Index
 
 
 update : (Msg m -> m) -> Msg m -> Model m -> ( Model m, Cmd m )
@@ -34,114 +35,70 @@ update lift msg model =
         Mdc msg_ ->
             Material.update (lift << Mdc) msg_ model
 
-        Toggle index ->
+        SwitchClicked index ->
             let
-                switch =
-                    Dict.get index model.switches
-                        |> Maybe.withDefault False
-                        |> not
+                state =
+                    Maybe.withDefault False (Dict.get index model.states)
 
-                switches =
-                    Dict.insert index switch model.switches
+                newState =
+                    not state
+
+                newStates =
+                    Dict.insert index newState model.states
             in
-            ( { model | switches = switches }, Cmd.none )
+            ( { model | states = newStates }, Cmd.none )
 
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    let
-        example options =
-            styled Html.div
-                (cs "example"
-                    :: css "display" "block"
-                    :: css "margin" "16px"
-                    :: css "padding" "40px"
-                    :: options
-                )
-    in
-    page.body "Switches"
-        [ Page.hero []
-            [ FormField.view []
-                [ let
-                    index =
+    page.demoPage
+        { title = "Switch"
+        , prelude =
+            [ """
+              Switches communicate an action a user can take. They are
+              typically placed throughout your UI, in places like dialogs,
+              forms, cards, and toolbars.
+              """
+            ]
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
+            [ Page.hero []
+                [ FormField.view []
+                    [ Switch.view (lift << Mdc)
                         "switch-hero-switch"
-
-                    on =
-                        Dict.get index model.switches
-                            |> Maybe.withDefault False
-                  in
-                  Switch.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Options.onClick (lift (Toggle index))
-                    , Switch.on |> when on
+                        model.mdc
+                        [ Options.onClick (lift (SwitchClicked "switch-hero-switch"))
+                        , when
+                            (Maybe.withDefault False
+                                (Dict.get "switch-hero-switch" model.states)
+                            )
+                            Switch.on
+                        ]
+                        []
                     ]
-                    []
                 ]
             ]
-        , example
-            [ css "background-color" "#eee"
-            ]
-            [ styled Html.h2
-                [ css "margin-left" "0"
-                , css "margin-top" "0"
-                ]
-                [ text "Enabled" ]
-            , let
-                id =
+        , content =
+            [ styled Html.h3 [ Typography.subtitle1 ] [ text "Switch" ]
+            , FormField.view []
+                [ Switch.view (lift << Mdc)
                     "switch-default-switch"
-
-                on =
-                    Dict.get id model.switches
-                        |> Maybe.withDefault False
-              in
-              FormField.view []
-                [ Switch.view (lift << Mdc)
-                    id
                     model.mdc
-                    [ Options.onClick (lift (Toggle id))
-                    , Switch.on |> when on
+                    [ Options.onClick (lift (SwitchClicked "switch-default-switch"))
+                    , when
+                        (Maybe.withDefault False
+                            (Dict.get "switch-default-switch" model.states)
+                        )
+                        Switch.on
                     ]
                     []
                 , styled Html.label
-                    [ Options.for id
-                    , css "font-size" "16px"
-                    ]
-                    [ text "off/on"
-                    ]
+                    [ Options.for "switch-default-switch" ]
+                    [ text "off/on" ]
                 ]
             ]
-        , example
-            [ css "background-color" "#eee"
-            ]
-            [ styled Html.h2
-                [ css "margin-left" "0"
-                , css "margin-top" "0"
-                ]
-                [ text "Disabled"
-                ]
-            , let
-                id =
-                    "switch-disabled-switch"
-
-                on =
-                    Dict.get id model.switches
-                        |> Maybe.withDefault False
-              in
-              FormField.view []
-                [ Switch.view (lift << Mdc)
-                    id
-                    model.mdc
-                    [ Options.onClick (lift (Toggle id))
-                    , Switch.disabled
-                    ]
-                    []
-                , styled Html.label
-                    [ Options.for "id"
-                    , css "font-size" "16px"
-                    ]
-                    [ text "off/on"
-                    ]
-                ]
-            ]
-        ]
+        }
