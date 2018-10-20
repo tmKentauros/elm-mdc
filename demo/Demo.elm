@@ -66,7 +66,7 @@ type alias Model =
     , gridList : Demo.GridList.Model Msg
     , iconToggle : Demo.IconToggle.Model Msg
     , imageList : Demo.ImageList.Model Msg
-    , layoutGrid : Demo.LayoutGrid.Model
+    , layoutGrid : Demo.LayoutGrid.Model Msg
     , lists : Demo.Lists.Model Msg
     , menus : Demo.Menus.Model Msg
     , permanentAboveDrawer : Demo.PermanentAboveDrawer.Model Msg
@@ -150,7 +150,7 @@ type Msg
     | GridListMsg (Demo.GridList.Msg Msg)
     | IconToggleMsg (Demo.IconToggle.Msg Msg)
     | ImageListMsg (Demo.ImageList.Msg Msg)
-    | LayoutGridMsg Demo.LayoutGrid.Msg
+    | LayoutGridMsg (Demo.LayoutGrid.Msg Msg)
     | ListsMsg (Demo.Lists.Msg Msg)
     | PermanentAboveDrawerMsg (Demo.PermanentAboveDrawer.Msg Msg)
     | PermanentBelowDrawerMsg (Demo.PermanentBelowDrawer.Msg Msg)
@@ -832,20 +832,12 @@ main =
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
-        ( layoutGrid, layoutGridEffects ) =
-            Demo.LayoutGrid.init LayoutGridMsg
-
         model =
             defaultModel key
     in
-    ( { model
-        | layoutGrid = layoutGrid
-        , key = key
-        , url = Demo.Url.fromUrl url
-      }
+    ( { model | url = Demo.Url.fromUrl url }
     , Cmd.batch
         [ Material.init Mdc
-        , layoutGridEffects
         ]
     )
 
@@ -856,7 +848,6 @@ subscriptions model =
         [ Material.subscriptions Mdc model
         , Demo.Drawer.subscriptions DrawerMsg model.drawer
         , Demo.GridList.subscriptions GridListMsg model.gridList
-        , Demo.LayoutGrid.subscriptions LayoutGridMsg model.layoutGrid
         , Demo.Menus.subscriptions MenuMsg model.menus
         , Demo.PermanentAboveDrawer.subscriptions PermanentAboveDrawerMsg model.permanentAboveDrawer
         , Demo.PermanentBelowDrawer.subscriptions PermanentBelowDrawerMsg model.permanentBelowDrawer
