@@ -8,27 +8,26 @@ import Material
 import Material.FormField as FormField
 import Material.Options as Options exposing (cs, css, styled, when)
 import Material.RadioButton as RadioButton
+import Material.Typography as Typography
 import Platform.Cmd exposing (Cmd, none)
 
 
 type alias Model m =
     { mdc : Material.Model m
-    , radios : Dict String String
+    , states : Dict String Bool
     }
 
 
 defaultModel : Model m
 defaultModel =
     { mdc = Material.defaultModel
-    , radios =
-        Dict.fromList
-            []
+    , states = Dict.fromList []
     }
 
 
 type Msg m
     = Mdc (Material.Msg m)
-    | Set String String
+    | RadioClicked String Bool
 
 
 update : (Msg m -> m) -> Msg m -> Model m -> ( Model m, Cmd m )
@@ -37,151 +36,94 @@ update lift msg model =
         Mdc msg_ ->
             Material.update (lift << Mdc) msg_ model
 
-        Set group value ->
+        RadioClicked index value ->
             let
-                radio =
-                    Dict.get group model.radios
-                        |> Maybe.withDefault ""
+                newStates =
+                    Dict.insert index value model.states
             in
-            ( { model
-                | radios = Dict.insert group value model.radios
-              }
-            , Cmd.none
-            )
+            ( { model | states = newStates }, Cmd.none )
 
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    let
-        example options =
-            styled Html.div
-                (cs "example"
-                    :: css "display" "block"
-                    :: css "margin" "24px"
-                    :: css "padding" "24px"
-                    :: options
-                )
-    in
-    page.body "Radio buttons"
-        [ let
-            group =
-                "hero"
-
-            isSelected isDef id =
-                Dict.get group model.radios
-                    |> Maybe.map ((==) id)
-                    |> Maybe.withDefault isDef
-          in
-          Page.hero []
-            [ example []
-                [ let
-                    id =
-                        "radio-buttons-hero-radio-1"
-                  in
-                  FormField.view []
-                    [ RadioButton.view (lift << Mdc)
-                        id
-                        model.mdc
-                        [ Options.onClick (lift (Set group id))
-                        , RadioButton.selected |> when (isSelected True id)
-                        ]
-                        []
+    page.demoPage
+        { title = "Radio Button"
+        , prelude =
+            [ """
+              Buttons communicate an action a user can take. They are typically
+              placed throughout your UI, in places like dialogs, forms, cards,
+              and toolbars.
+              """
+            ]
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
+            [ Html.div []
+                [ RadioButton.view (lift << Mdc)
+                    "radio-buttons-hero-radio-1"
+                    model.mdc
+                    [ cs "demo-radio"
+                    , Options.onClick (lift (RadioClicked "hero" False))
+                    , when (Maybe.withDefault False (Dict.get "hero" model.states) == False)
+                        RadioButton.selected
                     ]
-                , let
-                    id =
-                        "radio-buttons-hero-radio-2"
-                  in
-                  FormField.view []
-                    [ RadioButton.view (lift << Mdc)
-                        id
-                        model.mdc
-                        [ Options.onClick (lift (Set group id))
-                        , RadioButton.selected |> when (isSelected False id)
-                        ]
-                        []
+                    []
+                , RadioButton.view (lift << Mdc)
+                    "radio-buttons-hero-radio-2"
+                    model.mdc
+                    [ cs "demo-radio"
+                    , Options.onClick (lift (RadioClicked "hero" True))
+                    , when (Maybe.withDefault False (Dict.get "hero" model.states) == True)
+                        RadioButton.selected
                     ]
+                    []
                 ]
             ]
-        , let
-            group =
-                "ex0"
-
-            isSelected isDef id =
-                Dict.get group model.radios
-                    |> Maybe.map ((==) id)
-                    |> Maybe.withDefault isDef
-          in
-          example []
-            [ styled Html.h2
-                [ css "margin-left" "0"
-                , css "margin-top" "0"
-                ]
-                [ text "Radio" ]
-            , let
-                id =
+        , content =
+            [ styled Html.h3 [ Typography.subtitle1 ] [ text "Radio Buttons" ]
+            , FormField.view
+                [ cs "demo-radio-form-field" ]
+                [ RadioButton.view (lift << Mdc)
                     "radio-buttons-default-radio-1"
-              in
-              FormField.view []
-                [ RadioButton.view (lift << Mdc)
-                    id
                     model.mdc
-                    [ Options.onClick (lift (Set group id))
-                    , RadioButton.selected |> when (isSelected True id)
+                    [ Options.onClick (lift (RadioClicked "content" False))
+                    , when (Maybe.withDefault False (Dict.get "content" model.states) == False)
+                        RadioButton.selected
                     ]
                     []
-                , Html.label [ Html.for id ] [ text "Radio 1" ]
+                , Html.label
+                    [ Html.for "radio-buttons-default-radio-1" ]
+                    [ text "Radio 1" ]
                 ]
-            , let
-                id =
+            , FormField.view
+                [ cs "demo-radio-form-field" ]
+                [ RadioButton.view (lift << Mdc)
                     "radio-buttons-default-radio-2"
-              in
-              FormField.view []
-                [ RadioButton.view (lift << Mdc)
-                    id
                     model.mdc
-                    [ Options.onClick (lift (Set group id))
-                    , RadioButton.selected |> when (isSelected False id)
+                    [ Options.onClick (lift (RadioClicked "content" True))
+                    , when (Maybe.withDefault False (Dict.get "content" model.states) == True)
+                        RadioButton.selected
                     ]
                     []
-                , Html.label [ Html.for id ] [ text "Radio 2" ]
+                , Html.label
+                    [ Html.for "radio-buttons-default-radio-2" ]
+                    [ text "Radio 2" ]
                 ]
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
             ]
-        , example
-            []
-            [ styled Html.h2
-                [ css "margin-left" "0"
-                , css "margin-top" "0"
-                ]
-                [ text "Disabled" ]
-            , Html.div
-                []
-                [ let
-                    id =
-                        "radio-buttons-disabled-radio-1"
-                  in
-                  FormField.view []
-                    [ RadioButton.view (lift << Mdc)
-                        id
-                        model.mdc
-                        [ RadioButton.selected
-                        , RadioButton.disabled
-                        ]
-                        []
-                    , Html.label [ Html.for id ] [ text "Disabled Radio 1" ]
-                    ]
-                , let
-                    id =
-                        "radio-buttons-disabled-radio-2"
-                  in
-                  FormField.view []
-                    [ RadioButton.view (lift << Mdc)
-                        id
-                        model.mdc
-                        [ RadioButton.disabled
-                        ]
-                        []
-                    , Html.label [ Html.for id ] [ text "Disabled Radio 2" ]
-                    ]
-                ]
-            ]
-        ]
+        }
+
+
+style : String
+style =
+    """
+    .demo-radio,
+    .demo-radio-form-field {
+      margin: 0 10px;
+    }
+    """
