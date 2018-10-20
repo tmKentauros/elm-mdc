@@ -54,6 +54,7 @@ type alias Model =
     , key : Browser.Navigation.Key
     , url : Demo.Url.Url
     , drawerOpen : Bool
+    , startPage : Demo.Startpage.Model Msg
     , buttons : Demo.Buttons.Model Msg
     , cards : Demo.Cards.Model Msg
     , checkbox : Demo.Checkbox.Model Msg
@@ -92,6 +93,7 @@ defaultModel key =
     , key = key
     , url = Demo.Url.StartPage
     , drawerOpen = False
+    , startPage = Demo.Startpage.defaultModel
     , buttons = Demo.Buttons.defaultModel
     , cards = Demo.Cards.defaultModel
     , checkbox = Demo.Checkbox.defaultModel
@@ -136,6 +138,7 @@ type Msg
     | CloseDrawer
     | ToggleDrawer
     | DrawerItemClicked Demo.Url.Url
+    | StartpageMsg (Demo.Startpage.Msg Msg)
     | ButtonsMsg (Demo.Buttons.Msg Msg)
     | CardsMsg (Demo.Cards.Msg Msg)
     | CheckboxMsg (Demo.Checkbox.Msg Msg)
@@ -206,11 +209,17 @@ update msg model =
             , Browser.Navigation.pushUrl model.key (Demo.Url.toString url)
             )
 
-        -- TODO: scrollTop ())
         ButtonsMsg msg_ ->
             let
                 ( buttons, effects ) =
                     Demo.Buttons.update ButtonsMsg msg_ model.buttons
+            in
+            ( { model | buttons = buttons }, effects )
+
+        StartpageMsg msg_ ->
+            let
+                ( buttons, effects ) =
+                    Demo.Startpage.update StartpageMsg msg_ model.buttons
             in
             ( { model | buttons = buttons }, effects )
 
@@ -697,7 +706,7 @@ view_ model =
     in
     case model.url of
         Demo.Url.StartPage ->
-            Demo.Startpage.view page
+            Demo.Startpage.view StartpageMsg page model.startPage
 
         Demo.Url.Button ->
             Demo.Buttons.view ButtonsMsg page model.buttons
