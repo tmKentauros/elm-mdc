@@ -2,10 +2,12 @@ module Demo.Ripple exposing (Model, Msg(..), defaultModel, update, view)
 
 import Demo.Page as Page exposing (Page)
 import Html exposing (Html, text)
+import Html.Attributes as Html
 import Material
 import Material.Elevation as Elevation
 import Material.Options as Options exposing (cs, css, styled)
 import Material.Ripple as Ripple
+import Material.Typography as Typography
 
 
 -- MODEL
@@ -33,119 +35,156 @@ update lift msg model =
             Material.update (lift << Mdc) msg_ model
 
 
-
--- VIEW
-
-
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    let
-        demoSurface =
-            Options.many
-                [ cs "demo-surface"
-                , cs "mdc-ripple-surface"
-                , css "display" "flex"
-                , css "align-items" "center"
-                , css "justify-content" "center"
-                , css "width" "200px"
-                , css "height" "100px"
-                , css "padding" "1rem"
-                , css "cursor" "pointer"
-                , css "user-select" "none"
-                , css "-webkit-user-select" "none"
-                , cs "mdc-ripple-surface"
-                , Options.tabindex 0
-                ]
-
-        example options =
-            styled Html.section
-                (cs "example"
-                    :: css "display" "flex"
-                    :: css "flex-flow" "column"
-                    :: css "margin" "24px"
-                    :: css "padding" "24px"
-                    :: options
-                )
-    in
-    page.body "Ripple"
-        [ Page.hero []
+    page.demoPage
+        { title = "Ripple"
+        , prelude =
+            [ """
+              Ripples are visual representations used to communicate the status
+              of a component or interactive element.
+              """
+            ]
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
             [ let
                 ripple =
                     Ripple.bounded (lift << Mdc) "ripple-hero-ripple" model.mdc []
               in
               styled Html.div
-                [ css "width" "100%"
-                , css "height" "100%"
-                , cs "mdc-ripple-surface"
+                [ cs "ripple-demo-box mdc-ripple-surface"
                 , ripple.interactionHandler
                 , ripple.properties
                 ]
-                [ ripple.style
+                [ text "Click here!"
+                , ripple.style
                 ]
             ]
-        , example []
-            [ Html.h2 [] [ text "Bounded" ]
+        , content =
+            [ styled Html.h3 [ Typography.subtitle1 ] [ text "Bounded Ripple" ]
             , let
                 ripple =
                     Ripple.bounded (lift << Mdc) "ripple-bounded-ripple" model.mdc []
               in
               styled Html.div
-                [ demoSurface
-                , Elevation.z2
+                [ cs "ripple-demo-box mdc-ripple-surface"
                 , ripple.interactionHandler
                 , ripple.properties
                 ]
                 [ text "Interact with me!"
                 , ripple.style
                 ]
-            ]
-        , example []
-            [ Html.h2 [] [ text "Unbounded" ]
+            , styled Html.h3 [ Typography.subtitle1 ] [ text "Unbounded Ripple" ]
             , let
                 ripple =
                     Ripple.unbounded (lift << Mdc) "ripple-unbounded-ripple" model.mdc []
               in
               styled Html.div
-                [ cs "material-icons"
-                , css "width" "24px"
-                , css "height" "24px"
-                , css "padding" "12px"
-                , css "border-radius" "50%"
-                , demoSurface
+                [ cs "ripple-demo-icon material-icons"
+                , cs "mdc-ripple-surface"
                 , ripple.interactionHandler
                 , ripple.properties
                 ]
                 [ text "favorite"
                 , ripple.style
                 ]
-            ]
-        , example []
-            [ Html.h2 [] [ text "Theme Styles" ]
+            , styled Html.h3 [ Typography.subtitle1 ] [ text "Theme Colors: Primary" ]
             , let
                 ripple =
-                    Ripple.bounded (lift << Mdc) "ripple-primary-ripple" model.mdc [ Ripple.primary ]
+                    Ripple.bounded (lift << Mdc) "ripple-primary-ripple" model.mdc []
               in
               styled Html.div
-                [ demoSurface
-                , Elevation.z2
+                [ cs "ripple-demo-box ripple-demo-box--primary"
+                , cs "mdc-ripple-surface"
                 , ripple.interactionHandler
                 , ripple.properties
                 ]
                 [ text "Primary"
                 , ripple.style
                 ]
+            , styled Html.h3 [ Typography.subtitle1 ] [ text "Theme Colors: Secondary" ]
             , let
                 ripple =
-                    Ripple.bounded (lift << Mdc) "ripple-accent-ripple" model.mdc [ Ripple.accent ]
+                    Ripple.bounded (lift << Mdc) "ripple-secondary-ripple" model.mdc []
               in
               styled Html.div
-                [ demoSurface
-                , Elevation.z2
+                [ cs "ripple-demo-box ripple-demo-box--secondary"
+                , cs "mdc-ripple-surface"
                 , ripple.interactionHandler
                 , ripple.properties
                 ]
-                [ text "Accent"
+                [ text "Secondary"
                 , ripple.style
                 ]
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
             ]
-        ]
+        }
+
+
+style : String
+style =
+    """
+    .ripple-demo-box,
+    .ripple-demo-icon {
+      will-change: transform,opacity;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .ripple-demo-box {
+      -webkit-box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+      box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-align: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      width: 200px;
+      height: 100px;
+      padding: 1rem;
+      cursor: pointer;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #fff;
+      overflow: hidden;
+    }
+
+    .ripple-demo-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      padding: 12px;
+      overflow: visible;
+    }
+
+    .ripple-demo-box--primary {
+      color: #6200ee;
+      color: var(--mdc-theme-primary,#6200ee);
+    }
+
+    .ripple-demo-box--primary:before,
+    .ripple-demo-box--primary:after {
+      background-color: #6200ee;
+      background-color: var(--mdc-theme-primary,#6200ee);
+    }
+
+    .ripple-demo-box--secondary {
+      color: #018786;
+      color: var(--mdc-theme-secondary,#018786);
+    }
+
+    .ripple-demo-box--secondary:before,
+    .ripple-demo-box--secondary:after {
+      background-color: #018786;
+      background-color: var(--mdc-theme-secondary,#018786);
+    }
+    """
