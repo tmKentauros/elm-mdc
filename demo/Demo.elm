@@ -37,9 +37,13 @@ import Demo.TopAppBar
 import Demo.Typography
 import Demo.Url exposing (ToolbarPage(..), TopAppBarPage(..))
 import Html exposing (Html, text)
+import Html.Attributes as Html
 import Material
-import Material.Options as Options exposing (css, styled, when)
+import Material.Drawer.Temporary as Drawer
+import Material.List as Lists
+import Material.Options as Options exposing (cs, css, styled, when)
 import Material.Toolbar as Toolbar
+import Material.TopAppBar as TopAppBar
 import Material.Typography as Typography
 import Platform.Cmd exposing (..)
 import Url
@@ -49,6 +53,7 @@ type alias Model =
     { mdc : Material.Model Msg
     , key : Browser.Navigation.Key
     , url : Demo.Url.Url
+    , drawerOpen : Bool
     , buttons : Demo.Buttons.Model Msg
     , cards : Demo.Cards.Model Msg
     , checkbox : Demo.Checkbox.Model Msg
@@ -86,6 +91,7 @@ defaultModel key =
     { mdc = Material.defaultModel
     , key = key
     , url = Demo.Url.StartPage
+    , drawerOpen = False
     , buttons = Demo.Buttons.defaultModel
     , cards = Demo.Cards.defaultModel
     , checkbox = Demo.Checkbox.defaultModel
@@ -126,6 +132,10 @@ type Msg
     | UrlChanged Url.Url
     | UrlRequested Browser.UrlRequest
     | Navigate Demo.Url.Url
+    | OpenDrawer
+    | CloseDrawer
+    | ToggleDrawer
+    | DrawerItemClicked Demo.Url.Url
     | ButtonsMsg (Demo.Buttons.Msg Msg)
     | CardsMsg (Demo.Cards.Msg Msg)
     | CheckboxMsg (Demo.Checkbox.Msg Msg)
@@ -167,11 +177,8 @@ update msg model =
             ( model, Cmd.none )
 
         Navigate url ->
-            ( { model | url = url }
-            , Cmd.batch
-                [ Browser.Navigation.pushUrl model.key (Demo.Url.toString url)
-                -- , scrollTop () TODO
-                ]
+            ( model
+            , Browser.Navigation.pushUrl model.key (Demo.Url.toString url)
             )
 
         UrlRequested (Browser.Internal url) ->
@@ -183,8 +190,23 @@ update msg model =
             ( model, Cmd.none )
 
         UrlChanged url ->
-            ( { model | url = Demo.Url.fromUrl url } , Cmd.none ) -- TODO: scrollTop ())
+            ( { model | url = Demo.Url.fromUrl url }, Cmd.none )
 
+        OpenDrawer ->
+            ( { model | drawerOpen = True }, Cmd.none )
+
+        CloseDrawer ->
+            ( { model | drawerOpen = False }, Cmd.none )
+
+        ToggleDrawer ->
+            ( { model | drawerOpen = not model.drawerOpen }, Cmd.none )
+
+        DrawerItemClicked url ->
+            ( model
+            , Browser.Navigation.pushUrl model.key (Demo.Url.toString url)
+            )
+
+        -- TODO: scrollTop ())
         ButtonsMsg msg_ ->
             let
                 ( buttons, effects ) =
@@ -428,6 +450,249 @@ view_ model =
                             , nodes
                             ]
                         )
+            , demoPage =
+                \rec ->
+                    let
+                        style =
+                            """
+                    .catalog-page-container {
+                      position: relative;
+                    }
+
+                    .catalog-top-app-bar {
+                      background-color: #212121;
+                      position: absolute;
+                    }
+
+                    .demo-panel {
+                      display: -ms-flexbox;
+                      display: flex;
+                      position: relative;
+                      height: 100vh;
+                      overflow: hidden;
+                    }
+
+                    .demo-content {
+                      height: 100%;
+                      -webkit-box-sizing: border-box;
+                      box-sizing: border-box;
+                      max-width: 100%;
+                      padding-left: 16px;
+                      padding-right: 16px;
+                      padding-bottom: 100px;
+                      -webkit-transition: -webkit-transform .2s cubic-bezier(.4,0,.2,1) 50ms;
+                      transition: -webkit-transform .2s cubic-bezier(.4,0,.2,1) 50ms;
+                      -o-transition: .2s transform cubic-bezier(.4,0,.2,1) 50ms;
+                      transition: transform .2s cubic-bezier(.4,0,.2,1) 50ms;
+                      transition: transform .2s cubic-bezier(.4,0,.2,1) 50ms, -webkit-transform .2s cubic-bezier(.4,0,.2,1) 50ms;
+                      width: 100%;
+                      overflow: auto;
+                      display: -ms-flexbox;
+                      display: flex;
+                      -ms-flex-direction: column;
+                      flex-direction: column;
+                      -ms-flex-align: center;
+                      align-items: center;
+                      -ms-flex-pack: start;
+                      justify-content: flex-start;
+                    }
+
+                    .demo-content-transition {
+                      width: 100%;
+                      max-width: 900px;
+                    }
+
+                    .hero {
+                      display: -ms-flexbox;
+                      display: flex;
+                      -ms-flex-flow: row nowrap;
+                      flex-flow: row nowrap;
+                      -ms-flex-align: center;
+                      align-items: center;
+                      -ms-flex-pack: center;
+                      justify-content: center;
+                      min-height: 360px;
+                      padding: 24px;
+                      background-color: #f2f2f2;
+                    }
+
+                    .demo-title {
+                      border-bottom: 1px solid rgba(0,0,0,.87);
+                    }
+                    """
+                    in
+                    styled Html.div
+                        [ Typography.typography ]
+                        [ Html.div
+                            [ Html.class "catalog-page-container" ]
+                            [ Drawer.view Mdc
+                                "demo-page-drawer"
+                                model.mdc
+                                [ TopAppBar.fixedAdjust
+                                , when model.drawerOpen Drawer.open
+                                ]
+                                [ Lists.ul []
+                                    [ Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.StartPage) ]
+                                        [ text "Home" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Button) ]
+                                        [ text "Button" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Card) ]
+                                        [ text "Card" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Checkbox) ]
+                                        [ text "Checkbox" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Chips) ]
+                                        [ text "Chips" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Dialog) ]
+                                        [ text "Dialog" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Drawer) ]
+                                        [ text "Drawer" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Elevation) ]
+                                        [ text "Elevation" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Fabs) ]
+                                        [ text "FAB" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.IconToggle) ]
+                                        [ text "Icon Button" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.ImageList) ]
+                                        [ text "Image List" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.LayoutGrid) ]
+                                        [ text "Layout Grid" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.LinearProgress) ]
+                                        [ text "Linear Progress Indicator" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.List) ]
+                                        [ text "List" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Menu) ]
+                                        [ text "Menu" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.RadioButton) ]
+                                        [ text "Radio Button" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Ripple) ]
+                                        [ text "Ripple" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Select) ]
+                                        [ text "Select" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Slider) ]
+                                        [ text "Slider" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Snackbar) ]
+                                        [ text "Snackbar" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Switch) ]
+                                        [ text "Switch" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Tabs) ]
+                                        [ text "Tab Bar" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.TextField) ]
+                                        [ text "Text Field" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Theme) ]
+                                        [ text "Theme" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked (Demo.Url.TopAppBar Nothing)) ]
+                                        [ text "Top App Bar" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Typography) ]
+                                        [ text "Typography" ]
+                                    , Lists.li
+                                        [ Options.onClick (DrawerItemClicked Demo.Url.Button) ]
+                                        [ text "Button" ]
+                                    ]
+                                ]
+                            , TopAppBar.view Mdc
+                                "demo-page-top-app-bar"
+                                model.mdc
+                                [ cs "catalog-top-app-bar" ]
+                                [ TopAppBar.section [ TopAppBar.alignStart ]
+                                    [ TopAppBar.navigationIcon [ Options.onClick OpenDrawer ] "menu"
+                                    , TopAppBar.title [] [ text "elm-mdc" ]
+                                    ]
+                                ]
+                            , Html.div
+                                [ Html.class "demo-panel" ]
+                                [ styled Html.div
+                                    [ cs "demo-content"
+                                    , TopAppBar.fixedAdjust
+                                    ]
+                                    [ Html.div
+                                        [ Html.class "demo-content-transition" ]
+                                        [ Html.section
+                                            []
+                                            (List.concat
+                                                [ [ styled Html.h1
+                                                        [ Typography.headline5 ]
+                                                        [ text rec.title ]
+                                                  ]
+                                                , List.map
+                                                    (\string ->
+                                                        styled Html.p
+                                                            [ Typography.body1 ]
+                                                            [ text string ]
+                                                    )
+                                                    rec.prelude
+                                                , [ Html.div [ Html.class "hero" ] rec.hero ]
+                                                , [ styled Html.h2
+                                                        [ cs "demo-title"
+                                                        , Typography.headline2
+                                                        ]
+                                                        [ text "Resources" ]
+                                                  , Lists.a
+                                                        [ Options.attribute
+                                                            (Html.href rec.resources.materialGuidelines)
+                                                        ]
+                                                        [ Lists.graphicImage [] "images/material.svg"
+                                                        , text "Material Design Guidelines"
+                                                        ]
+                                                  , Lists.a
+                                                        [ Options.attribute
+                                                            (Html.href rec.resources.documentation)
+                                                        ]
+                                                        [ Lists.graphicImage []
+                                                            "images/ic_drive_document_24px.svg"
+                                                        , text "Documentation"
+                                                        ]
+                                                  , Lists.a
+                                                        [ Options.attribute
+                                                            (Html.href rec.resources.sourceCode)
+                                                        ]
+                                                        [ Lists.graphicImage [] "images/ic_code_24px.svg"
+                                                        , text "Source Code"
+                                                        ]
+                                                  ]
+                                                , [ styled Html.h2
+                                                        [ cs "demo-title"
+                                                        , Typography.headline2
+                                                        ]
+                                                        [ text "Demos" ]
+                                                  , Html.div [] rec.content
+                                                  ]
+                                                , [ Html.node "style"
+                                                        [ Html.type_ "text/css" ]
+                                                        [ text style ]
+                                                  ]
+                                                ]
+                                            )
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
             }
     in
     case model.url of

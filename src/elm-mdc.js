@@ -83,7 +83,7 @@ import CustomEvent from 'custom-event';
         }
       }
     }
-  }).observe(document.body, {
+  }).observe(document.querySelector("html"), {
     childList: true,
     subtree: true,
     attributes: true,
@@ -155,7 +155,7 @@ import CustomEvent from 'custom-event';
           }
         }
       }
-    }).observe(document.body, {
+    }).observe(document.querySelector("html"), {
       childList: true,
       subtree: true,
       attributes: true,

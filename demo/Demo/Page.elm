@@ -11,9 +11,11 @@ import Html exposing (Html, text)
 import Html.Attributes as Html
 import Material
 import Material.Icon as Icon
+import Material.List as Lists
 import Material.Options as Options exposing (Property, cs, css, styled, when)
 import Material.Toolbar as Toolbar
 import Material.TopAppBar as TopAppBar
+import Material.Typography as Typography
 
 
 type alias Page m =
@@ -21,6 +23,18 @@ type alias Page m =
     , fixedAdjust : Options.Property () m
     , navigate : Url -> m
     , body : String -> List (Html m) -> Html m
+    , demoPage :
+        { title : String
+        , prelude : List String
+        , resources :
+            { materialGuidelines : String
+            , documentation : String
+            , sourceCode : String
+            }
+        , hero : List (Html m)
+        , content : List (Html m)
+        }
+        -> Html m
     }
 
 

@@ -82,107 +82,64 @@ view lift page model =
                     ]
                 }
     in
-    page.body "Buttons"
-        [ styled Html.div
-            [ cs "demo-wrapper"
+    page.demoPage
+        { title = "Button"
+        , prelude =
+            [ """
+              Buttons communicate an action a user can take. They are typically
+              placed throughout your UI, in places like dialogs, forms, cards, and
+              toolbars.
+              """
             ]
-            [ styled Html.h1
-                [ cs "mdc-typography--headline5"
-
-                -- TODO: Typography.headline5?
+        , resources =
+            { materialGuidelines = "https://material.io/go/design-buttons"
+            , documentation = "https://material.io/components/web/catalog/buttons"
+            , sourceCode = "https://github.com/material-components/material-components-web/tree/master/packages/mdc-button"
+            }
+        , hero =
+            [ Button.view (lift << Mdc)
+                "buttons-hero-button-flat"
+                model.mdc
+                [ Button.ripple
+                , css "margin" "16px 32px"
                 ]
-                [ styled Html.h1
-                    [ Typography.headline5
-                    ]
-                    [ text "Button"
-                    ]
-                , styled Html.p
-                    [ Typography.body1
-                    ]
-                    [ text """
-Buttons communicate an action a user can take. They are typically placed
-throughout your UI, in places like dialogs, forms, cards, and toolbars.
-                        """
-                    ]
-                , Hero.view []
-                    [ Button.view (lift << Mdc)
-                        "buttons-hero-button-flat"
-                        model.mdc
-                        [ Button.ripple
-                        , css "margin-right" "32px"
-                        ]
-                        [ text "Flat"
-                        ]
-                    , styled Html.h2
-                        [ Typography.headline6
-                        , css "border-bottom" "1px solid rgba(0,0,0,.87)"
-                        ]
-                        [ text "Raised"
-                        ]
-                    , ResourceLink.view
-                        { link = "https://material.io/go/design-buttons"
-                        , title = "Material Design Guidelines"
-                        , icon = "images/material.svg"
-                        , altText = "Material Design Guidelines icon"
-                        }
-                    , ResourceLink.view
-                        { link = "https://material.io/components/web/catalog/buttons/"
-                        , title = "Documentation"
-                        , icon = "images/ic_drive_document_24px.svg"
-                        , altText = "Documentation icon"
-                        }
-                    , ResourceLink.view
-                        { link = "https://github.com/material-components/material-components-web/tree/master/packages/mdc-button"
-                        , title = "Source Code (Material Components Web)"
-                        , icon = "images/ic_code_24px.svg"
-                        , altText = "Source Code"
-                        }
-                    , styled Html.h2
-                        [ Typography.headline6
-                        , css "border-bottom" "1px solid rgba(0,0,0,.87)"
-                        ]
-                        [ text "Outlined"
-                        ]
-                    ]
-                , styled Html.h2
-                    [ cs "mdc-typography--headline6"
-
-                    -- TODO: Typography.headline6?
-                    , css "border-bottom" "1px solid rgba(0,0,0,.87)"
-                    ]
-                    [ text "Resources"
-                    ]
-                , ResourceLink.view
-                    { link = "https://material.io/go/design-buttons"
-                    , title = "Material Design Guidelines"
-                    , icon = "images/material.svg"
-                    , altText = "Material Design Guidelines icon"
-                    }
-                , ResourceLink.view
-                    { link = "https://material.io/components/web/catalog/buttons/"
-                    , title = "Documentation"
-                    , icon = "images/ic_drive_document_24px.svg"
-                    , altText = "Documentation icon"
-                    }
-                , ResourceLink.view
-                    { link = "https://github.com/material-components/material-components-web/tree/master/packages/mdc-button"
-                    , title = "Source Code (Material Components Web)"
-                    , icon = "images/ic_code_24px.svg"
-                    , altText = "Source Code"
-                    }
-                , styled Html.h2
-                    [ cs "mdc-typography--headline6"
-                    , css "border-bottom" "1px solid rgba(0,0,0,.87)"
-                    ]
-                    [ text "Demos"
-                    ]
-                , textButtons "buttons-text-buttons"
-                , raisedButtons "buttons-raised-buttons"
-                , unelevatedButtons "buttons-unelevated-buttons"
-                , outlinedButtons "buttons-outlined-buttons"
+                [ text "Flat"
+                ]
+            , Button.view (lift << Mdc)
+                "buttons-hero-button-raised"
+                model.mdc
+                [ Button.ripple
+                , Button.raised
+                , css "margin" "16px 32px"
+                ]
+                [ text "Raised"
+                ]
+            , Button.view (lift << Mdc)
+                "buttons-hero-button-unelevated"
+                model.mdc
+                [ Button.ripple
+                , Button.unelevated
+                , css "margin" "16px 32px"
+                ]
+                [ text "Unelevated"
+                ]
+            , Button.view (lift << Mdc)
+                "buttons-hero-button-outlined"
+                model.mdc
+                [ Button.ripple
+                , Button.outlined
+                , css "margin" "16px 32px"
+                ]
+                [ text "Outlined"
                 ]
             ]
-        ]
+        , content =
+            [ textButtons "buttons-text-buttons"
+            , raisedButtons "buttons-raised-buttons"
+            , unelevatedButtons "buttons-unelevated-buttons"
+            , outlinedButtons "buttons-outlined-buttons"
+            ]
+        }
 
 
 example :
@@ -195,39 +152,25 @@ example :
         }
     -> Html m
 example idx lift model { title, additionalOptions } =
-    styled Html.div
-        []
+    Html.div []
         [ styled Html.h3
             [ Typography.subtitle1
             ]
             [ text title
             ]
-        , styled Html.div
-            []
-            [ Button.view (lift << Mdc)
-                (idx ++ "-baseline-button")
-                model.mdc
-                additionalOptions
-                [ text "Baseline" ]
-            , Button.view (lift << Mdc)
-                (idx ++ "-dense-button")
-                model.mdc
-                (Button.dense :: additionalOptions)
-                [ text "Dense" ]
-            , Button.view (lift << Mdc)
-                (idx ++ "-secondary-button")
-                model.mdc
-                (cs "secondary-button" :: additionalOptions)
-                [ text "Secondary" ]
-            , Button.view (lift << Mdc)
-                (idx ++ "-icon-button")
-                model.mdc
-                (Button.icon "favorite" :: additionalOptions)
-                [ text "Icon" ]
-            , Button.view (lift << Mdc)
-                (idx ++ "-link-button")
-                model.mdc
-                (Button.link "#buttons" :: additionalOptions)
-                [ text "Link" ]
-            ]
+        , Button.view (lift << Mdc)
+            (idx ++ "-default-button")
+            model.mdc
+            additionalOptions
+            [ text "Baseline" ]
+        , Button.view (lift << Mdc)
+            (idx ++ "-dense-button")
+            model.mdc
+            (Button.dense :: additionalOptions)
+            [ text "Dense" ]
+        , Button.view (lift << Mdc)
+            (idx ++ "-icon-button")
+            model.mdc
+            (Button.icon "favorite" :: additionalOptions)
+            [ text "Icon" ]
         ]
