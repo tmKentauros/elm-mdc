@@ -10,32 +10,31 @@ import Material.Dialog as Dialog
 import Material.FormField as FormField
 import Material.List as Lists
 import Material.Options as Options exposing (cs, css, styled, when)
+import Material.RadioButton as RadioButton
 
 
 type alias Model m =
     { mdc : Material.Model m
-    , rtl : Bool
-    , showDialog : Bool
-    , showScrollingDialog : Bool
+    , openDialog : String
+    , dialogOpen : Bool
+    , ringtone : String
     }
 
 
 defaultModel : Model m
 defaultModel =
     { mdc = Material.defaultModel
-    , rtl = False
-    , showDialog = False
-    , showScrollingDialog = False
+    , openDialog = ""
+    , dialogOpen = False
+    , ringtone = "dialog-ringtone-0"
     }
 
 
 type Msg m
     = Mdc (Material.Msg m)
-    | ToggleRtl
-    | Accept
-    | Cancel
-    | ShowDialog
-    | ShowScrollingDialog
+    | ButtonClicked String
+    | DialogClosed
+    | RingtoneChanged String
 
 
 update : (Msg m -> m) -> Msg m -> Model m -> ( Model m, Cmd m )
@@ -44,28 +43,14 @@ update lift msg model =
         Mdc msg_ ->
             Material.update (lift << Mdc) msg_ model
 
-        ToggleRtl ->
-            ( { model | rtl = not model.rtl }, Cmd.none )
+        DialogClosed ->
+            ( { model | dialogOpen = False }, Cmd.none )
 
-        Accept ->
-            let
-                _ =
-                    Debug.log "click" "accept"
-            in
-            ( { model | showDialog = False, showScrollingDialog = False }, Cmd.none )
+        ButtonClicked index ->
+            ( { model | openDialog = index, dialogOpen = True }, Cmd.none )
 
-        Cancel ->
-            let
-                _ =
-                    Debug.log "click" "cancel"
-            in
-            ( { model | showDialog = False, showScrollingDialog = False }, Cmd.none )
-
-        ShowDialog ->
-            ( { model | showDialog = True }, Cmd.none )
-
-        ShowScrollingDialog ->
-            ( { model | showScrollingDialog = True }, Cmd.none )
+        RingtoneChanged index ->
+            ( { model | ringtone = index }, Cmd.none )
 
 
 heroDialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
@@ -73,91 +58,180 @@ heroDialog lift index model =
     Dialog.view (lift << Mdc)
         index
         model.mdc
-        [ cs "mdc-dialog--open"
-        , css "position" "relative"
-        , css "width" "320px"
-        , css "z-index" "auto"
-        ]
-        [ Dialog.surface
-            [ css "display" "inline-flex"
-            , css "min-width" "640px"
-            , css "max-width" "865px"
-            , css "width" "calc(100% - 30px)"
-            ]
-            [ Dialog.header []
-                [ styled Html.h2
-                    [ Dialog.title
-                    ]
-                    [ text "Are you happy?"
-                    ]
-                ]
-            , Dialog.body []
-                [ text "Please check the left and right side of this element for fun."
-                ]
-            , Dialog.footer []
-                [ Button.view (lift << Mdc)
-                    (index ++ "-button-cancel")
-                    model.mdc
-                    [ Button.ripple
-                    , Dialog.cancel
-                    ]
-                    [ text "Cancel"
-                    ]
-                , Button.view (lift << Mdc)
-                    (index ++ "button-accept")
-                    model.mdc
-                    [ Button.ripple
-                    , Dialog.accept
-                    ]
-                    [ text "Continue"
-                    ]
-                ]
-            ]
-        ]
-
-
-dialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
-dialog lift index model =
-    Dialog.view (lift << Mdc)
-        index
-        model.mdc
-        [ Dialog.open |> when model.showDialog
-        , Dialog.onClose (lift Cancel)
+        [ cs "hero-demo"
+        , cs "mdc-dialog--open"
         ]
         [ Dialog.surface []
             [ Dialog.header []
                 [ styled Html.h2
-                    [ Dialog.title
-                    ]
-                    [ text "Use Google's location service?"
-                    ]
+                    [ Dialog.title ]
+                    [ text "Get this party started?" ]
                 ]
             , Dialog.body []
-                [ text
-                    """
-Let Google help apps determine location. This means sending anonymous location
-data to Google, even when no apps are running.
-            """
-                ]
+                [ text "Turn up the jams and have a good time." ]
             , Dialog.footer []
                 [ Button.view (lift << Mdc)
-                    (index ++ "-button-cancel")
+                    (index ++ "__button-cancel")
                     model.mdc
                     [ Button.ripple
                     , Dialog.cancel
-                    , Options.onClick (lift Cancel)
                     ]
-                    [ text "Decline"
-                    ]
+                    [ text "Decline" ]
                 , Button.view (lift << Mdc)
-                    (index ++ "-button-accept")
+                    (index ++ "__button-accept")
                     model.mdc
                     [ Button.ripple
                     , Dialog.accept
-                    , Options.onClick (lift Accept)
                     ]
-                    [ text "Continue"
+                    [ text "Accept" ]
+                ]
+            ]
+        ]
+
+
+alertDialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
+alertDialog lift index model =
+    let
+        isOpen =
+            (model.openDialog == index) && model.dialogOpen
+    in
+    Dialog.view (lift << Mdc)
+        index
+        model.mdc
+        [ Dialog.onClose (lift DialogClosed)
+        , when isOpen Dialog.open
+        ]
+        [ Dialog.surface []
+            [ Dialog.body []
+                [ Html.p [] [ text "Discard draft?" ] ]
+            , Dialog.footer []
+                [ Button.view (lift << Mdc)
+                    (index ++ "__button-cancel")
+                    model.mdc
+                    [ Button.ripple
+                    , Dialog.cancel
+                    , Button.onClick (lift DialogClosed)
                     ]
+                    [ text "Cancel" ]
+                , Button.view (lift << Mdc)
+                    (index ++ "__button-accept")
+                    model.mdc
+                    [ Button.ripple
+                    , Dialog.accept
+                    , Button.onClick (lift DialogClosed)
+                    ]
+                    [ text "Discard" ]
+                ]
+            ]
+        , Dialog.backdrop [] []
+        ]
+
+
+simpleDialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
+simpleDialog lift index model =
+    let
+        isOpen =
+            (model.openDialog == index) && model.dialogOpen
+    in
+    Dialog.view (lift << Mdc)
+        index
+        model.mdc
+        [ Dialog.onClose (lift DialogClosed)
+        , when isOpen Dialog.open
+        ]
+        [ Dialog.surface []
+            [ Dialog.header []
+                [ styled Html.h2
+                    [ Dialog.title ]
+                    [ text "Select an account" ]
+                ]
+            , Dialog.body []
+                [ Lists.ul
+                    [ Lists.avatarList ]
+                    [ Lists.li
+                        [ Options.onClick (lift DialogClosed) ]
+                        [ Lists.graphicIcon [] "person"
+                        , text "user1@example.com"
+                        ]
+                    , Lists.li
+                        [ Options.onClick (lift DialogClosed) ]
+                        [ Lists.graphicIcon [] "person"
+                        , text "user2@example.com"
+                        ]
+                    , Lists.li
+                        [ Options.onClick (lift DialogClosed) ]
+                        [ Lists.graphicIcon [] "add"
+                        , text "Add account"
+                        ]
+                    ]
+                ]
+            ]
+        , Dialog.backdrop [] []
+        ]
+
+
+confirmationDialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
+confirmationDialog lift index model =
+    let
+        isOpen =
+            (model.openDialog == index) && model.dialogOpen
+
+        radiobutton ringtone =
+            RadioButton.view (lift << Mdc)
+                ringtone
+                model.mdc
+                [ when (model.ringtone == ringtone) RadioButton.selected
+                ]
+                []
+    in
+    Dialog.view (lift << Mdc)
+        index
+        model.mdc
+        [ Dialog.onClose (lift DialogClosed)
+        , when isOpen Dialog.open
+        ]
+        [ Dialog.surface []
+            [ Dialog.header []
+                [ styled Html.h2
+                    [ Dialog.title ]
+                    [ text "Phone ringtone" ]
+                ]
+            , Dialog.body []
+                [ Lists.ul []
+                    [ Lists.li
+                        [ Options.onClick (lift (RingtoneChanged "dialog-ringtone-0")) ]
+                        [ Lists.graphic [] [ radiobutton "dialog-ringtone-0" ]
+                        , text "Never Gonna Give You Up"
+                        ]
+                    , Lists.li
+                        [ Options.onClick (lift (RingtoneChanged "dialog-ringtone-1")) ]
+                        [ Lists.graphic [] [ radiobutton "dialog-ringtone-1" ]
+                        , text "Hot Cross Buns"
+                        ]
+                    , Lists.li
+                        [ Options.onClick (lift (RingtoneChanged "dialog-ringtone-2")) ]
+                        [ Lists.graphic [] [ radiobutton "dialog-ringtone-2" ]
+                        , text "None"
+                        ]
+                    ]
+                ]
+            , Dialog.footer []
+                [ Button.view (lift << Mdc)
+                    (index ++ "__button-cancel")
+                    model.mdc
+                    [ Button.ripple
+                    , Dialog.cancel
+                    , Button.onClick (lift DialogClosed)
+                    ]
+                    [ text "Cancel" ]
+                , Button.view (lift << Mdc)
+                    (index ++ "__button-accept")
+                    model.mdc
+                    [ Button.ripple
+                    , Dialog.accept
+                    , Button.onClick (lift DialogClosed)
+                    ]
+                    [ text "Ok" ]
                 ]
             ]
         , Dialog.backdrop [] []
@@ -166,63 +240,146 @@ data to Google, even when no apps are running.
 
 scrollableDialog : (Msg m -> m) -> Material.Index -> Model m -> Html m
 scrollableDialog lift index model =
+    let
+        isOpen =
+            (model.openDialog == index) && model.dialogOpen
+    in
     Dialog.view (lift << Mdc)
         index
         model.mdc
-        [ Dialog.open |> when model.showScrollingDialog
-        , Dialog.onClose (lift Cancel)
+        [ Dialog.onClose (lift DialogClosed)
+        , when isOpen Dialog.open
         ]
         [ Dialog.surface []
             [ Dialog.header []
                 [ styled Html.h2
-                    [ Dialog.title
-                    ]
-                    [ text "Choose a Ringtone"
-                    ]
+                    [ Dialog.title ]
+                    [ text "The Wonderful Wizard of Oz" ]
                 ]
             , Dialog.body
                 [ Dialog.scrollable
                 ]
-                [ Lists.ul []
-                    ([ "None"
-                     , "Callisto"
-                     , "Ganymede"
-                     , "Luna"
-                     , "Marimba"
-                     , "Schwifty"
-                     , "Callisto"
-                     , "Ganymede"
-                     , "Luna"
-                     , "Marimba"
-                     , "Schwifty"
-                     ]
-                        |> List.map
-                            (\label ->
-                                Lists.li []
-                                    [ text label
-                                    ]
-                            )
-                    )
+                [ Html.p []
+                    [ Html.a
+                        [ Html.href "https://www.gutenberg.org/ebooks/55"
+                        , Html.target "_blank"
+                        ]
+                        [ text "Read the full book" ]
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        Dorothy lived in the midst of the great Kansas
+                        prairies, with Uncle Henry, who was a farmer, and Aunt
+                        Em, who was the farmer's wife. Their house was small,
+                        for the lumber to build it had to be carried by wagon
+                        many miles. There were four walls, a floor and a roof,
+                        which made one room; and this room contained a rusty
+                        looking cookstove, a cupboard for the dishes, a table,
+                        three or four chairs, and the beds. Uncle Henry and
+                        Aunt Em had a big bed in one corner, and Dorothy a
+                        little bed in another corner. There was no garret at
+                        all, and no cellar--except a small hole dug in the
+                        ground, called a cyclone cellar, where the family could
+                        go in case one of those great whirlwinds arose, mighty
+                        enough to crush any building in its path. It was
+                        reached by a trap door in the middle of the floor, from
+                        which a ladder led down into the small, dark hole.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        When Dorothy stood in the doorway and looked around,
+                        she could see nothing but the great gray prairie on
+                        every side. Not a tree nor a house broke the broad
+                        sweep of flat country that reached to the edge of the
+                        sky in all directions. The sun had baked the plowed
+                        land into a gray mass, with little cracks running
+                        through it. Even the grass was not green, for the sun
+                        had burned the tops of the long blades until they were
+                        the same gray color to be seen everywhere. Once the
+                        house had been painted, but the sun blistered the paint
+                        and the rains washed it away, and now the house was as
+                        dull and gray as everything else.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        When Aunt Em came there to live she was a young, pretty
+                        wife. The sun and wind had changed her, too. They had
+                        taken the sparkle from her eyes and left them a sober
+                        gray; they had taken the red from her cheeks and lips,
+                        and they were gray also. She was thin and gaunt, and
+                        never smiled now. When Dorothy, who was an orphan,
+                        first came to her, Aunt Em had been so startled by the
+                        child's laughter that she would scream and press her
+                        hand upon her heart whenever Dorothy's merry voice
+                        reached her ears; and she still looked at the little
+                        girl with wonder that she could find anything to laugh
+                        at.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        Uncle Henry never laughed. He worked hard from morning
+                        till night and did not know what joy was. He was gray
+                        also, from his long beard to his rough boots, and he
+                        looked stern and solemn, and rarely spoke.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        It was Toto that made Dorothy laugh, and saved her from
+                        growing as gray as her other surroundings. Toto was not
+                        gray; he was a little black dog, with long silky hair
+                        and small black eyes that twinkled merrily on either
+                        side of his funny, wee nose. Toto played all day long,
+                        and Dorothy played with him, and loved him dearly.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        Today, however, they were not playing. Uncle Henry sat
+                        upon the doorstep and looked anxiously at the sky,
+                        which was even grayer than usual. Dorothy stood in the
+                        door with Toto in her arms, and looked at the sky too.
+                        Aunt Em was washing the dishes.
+                        """
+                    ]
+                , Html.p []
+                    [ text
+                        """
+                        From the far north they heard a low wail of the wind,
+                        and Uncle Henry and Dorothy could see where the long
+                        grass bowed in waves before the coming storm. There now
+                        came a sharp whistling in the air from the south, and
+                        as they turned their eyes that way they saw ripples in
+                        the grass coming from that direction also.
+                        """
+                    ]
                 ]
             , Dialog.footer []
                 [ Button.view (lift << Mdc)
-                    (index ++ "-button-cancel")
+                    (index ++ "__button-cancel")
                     model.mdc
                     [ Button.ripple
                     , Dialog.cancel
-                    , Options.onClick (lift Cancel)
+                    , Button.onClick (lift DialogClosed)
                     ]
-                    [ text "Decline"
-                    ]
+                    [ text "Decline" ]
                 , Button.view (lift << Mdc)
-                    (index ++ "-button-accept")
+                    (index ++ "__button-accept")
                     model.mdc
                     [ Button.ripple
                     , Dialog.accept
-                    , Options.onClick (lift Accept)
+                    , Button.onClick (lift DialogClosed)
                     ]
-                    [ text "Continue"
-                    ]
+                    [ text "Accept" ]
                 ]
             ]
         , Dialog.backdrop [] []
@@ -231,57 +388,72 @@ scrollableDialog lift index model =
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    page.body "Dialog"
-        [ Page.hero
-            [ css "justify-content" "center"
-            , Options.attribute (Html.attribute "dir" "rtl") |> when model.rtl
+    page.demoPage
+        { title = "Dialog"
+        , prelude =
+            [ """
+              Dialogs inform users about a specific task and may contain
+              critical information, require decisions, or involve multiple
+              tasks.
+              """
             ]
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
             [ heroDialog lift "dialog-hero-dialog" model
             ]
-        , styled Html.div
-            [ css "padding" "24px"
-            , css "marign" "0"
-            , css "box-sizing" "border-box"
-            , Options.attribute (Html.attribute "dir" "rtl") |> when model.rtl
-            ]
-            [ dialog lift "dialog-dialog" model
-            , scrollableDialog lift "dialog-scrollable-dialog" model
-            ]
-        , styled Html.div
-            [ css "padding" "24px"
-            , css "margin" "24px"
-            ]
+        , content =
             [ Button.view (lift << Mdc)
-                "dialog-show-dialog"
+                "dialog-alert-dialog-button"
                 model.mdc
-                [ Button.raised
-                , Button.ripple
-                , Options.onClick (lift ShowDialog)
+                [ Button.ripple
+                , Button.onClick (lift (ButtonClicked "dialog-alert-dialog"))
                 ]
-                [ text "Show dialog"
+                [ text "Alert"
                 ]
-            , text " "
             , Button.view (lift << Mdc)
-                "dialog-show-scrollable-dialog"
+                "dialog-simple-dialog-button"
                 model.mdc
-                [ Button.raised
-                , Button.ripple
-                , Options.onClick (lift ShowScrollingDialog)
+                [ Button.ripple
+                , Button.onClick (lift (ButtonClicked "dialog-simple-dialog"))
                 ]
-                [ text "Show scrolling dialog"
+                [ text "Simple"
                 ]
-            , text " "
-            , FormField.view []
-                [ Checkbox.view (lift << Mdc)
-                    "dialog-toggle-rtl"
-                    model.mdc
-                    [ Checkbox.checked model.rtl
-                    , Options.onClick (lift ToggleRtl)
-                    ]
-                    []
-                , Html.label []
-                    [ text "Toggle RTL"
-                    ]
+            , Button.view (lift << Mdc)
+                "dialog-confirmation-dialog-button"
+                model.mdc
+                [ Button.ripple
+                , Button.onClick (lift (ButtonClicked "dialog-confirmation-dialog"))
                 ]
+                [ text "Confirmation"
+                ]
+            , Button.view (lift << Mdc)
+                "dialog-scrollable-dialog-button"
+                model.mdc
+                [ Button.ripple
+                , Button.onClick (lift (ButtonClicked "dialog-scrollable-dialog"))
+                ]
+                [ text "Scrollable"
+                ]
+            , alertDialog lift "dialog-alert-dialog" model
+            , simpleDialog lift "dialog-simple-dialog" model
+            , confirmationDialog lift "dialog-confirmation-dialog" model
+            , scrollableDialog lift "dialog-scrollable-dialog" model
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
             ]
-        ]
+        }
+
+
+style : String
+style =
+    """
+    .hero-demo {
+      position: relative;
+      z-index: 0;
+    }
+    """
