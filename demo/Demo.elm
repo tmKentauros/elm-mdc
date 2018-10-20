@@ -66,6 +66,7 @@ type alias Model =
     , gridList : Demo.GridList.Model Msg
     , iconToggle : Demo.IconToggle.Model Msg
     , imageList : Demo.ImageList.Model Msg
+    , linearProgress : Demo.LinearProgress.Model Msg
     , layoutGrid : Demo.LayoutGrid.Model Msg
     , lists : Demo.Lists.Model Msg
     , menus : Demo.Menus.Model Msg
@@ -105,6 +106,7 @@ defaultModel key =
     , gridList = Demo.GridList.defaultModel
     , iconToggle = Demo.IconToggle.defaultModel
     , imageList = Demo.ImageList.defaultModel
+    , linearProgress = Demo.LinearProgress.defaultModel
     , layoutGrid = Demo.LayoutGrid.defaultModel
     , lists = Demo.Lists.defaultModel
     , menus = Demo.Menus.defaultModel
@@ -150,6 +152,7 @@ type Msg
     | GridListMsg (Demo.GridList.Msg Msg)
     | IconToggleMsg (Demo.IconToggle.Msg Msg)
     | ImageListMsg (Demo.ImageList.Msg Msg)
+    | LinearProgressMsg (Demo.LinearProgress.Msg Msg)
     | LayoutGridMsg (Demo.LayoutGrid.Msg Msg)
     | ListsMsg (Demo.Lists.Msg Msg)
     | PermanentAboveDrawerMsg (Demo.PermanentAboveDrawer.Msg Msg)
@@ -313,6 +316,13 @@ update msg model =
                     Demo.ImageList.update ImageListMsg msg_ model.imageList
             in
             ( { model | imageList = imageList }, effects )
+
+        LinearProgressMsg msg_ ->
+            let
+                ( linearProgress, effects ) =
+                    Demo.LinearProgress.update LinearProgressMsg msg_ model.linearProgress
+            in
+            ( { model | linearProgress = linearProgress }, effects )
 
         MenuMsg msg_ ->
             let
@@ -751,7 +761,7 @@ view_ model =
             Demo.ImageList.view ImageListMsg page model.imageList
 
         Demo.Url.LinearProgress ->
-            Demo.LinearProgress.view page
+            Demo.LinearProgress.view LinearProgressMsg page model.linearProgress
 
         Demo.Url.List ->
             Demo.Lists.view ListsMsg page model.lists
