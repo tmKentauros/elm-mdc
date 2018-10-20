@@ -2,6 +2,7 @@ module Demo.Elevation exposing (Model, Msg(..), defaultModel, update, view)
 
 import Demo.Page as Page exposing (Page)
 import Html exposing (Html, text)
+import Html.Attributes as Html
 import Material
 import Material.Elevation as Elevation
 import Material.Options as Options exposing (cs, css, styled, when)
@@ -9,16 +10,12 @@ import Material.Options as Options exposing (cs, css, styled, when)
 
 type alias Model m =
     { mdc : Material.Model m
-    , transition : Bool
-    , elevation : Int
     }
 
 
 defaultModel : Model m
 defaultModel =
-    { transition = False
-    , elevation = 1
-    , mdc = Material.defaultModel
+    { mdc = Material.defaultModel
     }
 
 
@@ -33,141 +30,107 @@ update lift msg model =
             Material.update (lift << Mdc) msg_ model
 
 
-
--- VIEW
+elevationDemoSurface : Options.Property c m -> String -> Html m
+elevationDemoSurface elevation label =
+    styled Html.div
+        [ cs "elevation-demo-surface"
+        , elevation
+        ]
+        [ text label ]
 
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    let
-        demoSurface options =
-            styled Html.figure
-                (css "width" "96px"
-                    :: css "height" "48px"
-                    :: css "margin" "24px 24px"
-                    :: css "background-color" "#212121"
-                    :: css "color" "#f0f0f0"
-                    :: css "display" "flex"
-                    :: css "align-items" "center"
-                    :: css "justify-content" "center"
-                    :: css "font-size" ".8em"
-                    :: options
-                )
-                << List.singleton
-                << Html.figcaption []
-    in
-    page.body "Elevation"
-        [ Page.hero []
-            [ demoSurface
-                [ Elevation.z0
-                ]
-                [ text "FLAT 0dp" ]
-            , demoSurface
-                [ Elevation.z4
-                ]
-                [ text "RAISED 4dp" ]
+    page.demoPage
+        { title = "Elevation"
+        , prelude =
+            [ """
+              Elevation is the relative depth, or distance, between two
+              surfaces along the z-axis.
+              """
             ]
-        , styled Html.div
-            [ css "display" "flex"
-            , css "flex-flow" "row wrap"
-            , css "padding-top" "48px"
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
+            [ Html.div
+                [ Html.class "elevation-hero" ]
+                [ elevationDemoSurface Elevation.z0 "Flat 0dp"
+                , elevationDemoSurface Elevation.z8 "Raised 8dp"
+                , elevationDemoSurface Elevation.z16 "Raised 16dp"
+                ]
             ]
-            (List.map
-                (\z ->
-                    styled Html.figure
-                        [ case z of
-                            0 ->
-                                Elevation.z0
+        , content =
+            [ Html.div
+                [ Html.class "elevation-demo-container" ]
+                [ elevationDemoSurface Elevation.z0 "0dp"
+                , elevationDemoSurface Elevation.z1 "1dp"
+                , elevationDemoSurface Elevation.z2 "2dp"
+                , elevationDemoSurface Elevation.z3 "3dp"
+                , elevationDemoSurface Elevation.z4 "4dp"
+                , elevationDemoSurface Elevation.z5 "5dp"
+                , elevationDemoSurface Elevation.z6 "6dp"
+                , elevationDemoSurface Elevation.z7 "7dp"
+                , elevationDemoSurface Elevation.z8 "8dp"
+                , elevationDemoSurface Elevation.z9 "9dp"
+                , elevationDemoSurface Elevation.z10 "10dp"
+                , elevationDemoSurface Elevation.z11 "11dp"
+                , elevationDemoSurface Elevation.z12 "12dp"
+                , elevationDemoSurface Elevation.z13 "13dp"
+                , elevationDemoSurface Elevation.z14 "14dp"
+                , elevationDemoSurface Elevation.z15 "15dp"
+                , elevationDemoSurface Elevation.z16 "16dp"
+                , elevationDemoSurface Elevation.z17 "17dp"
+                , elevationDemoSurface Elevation.z18 "18dp"
+                , elevationDemoSurface Elevation.z19 "19dp"
+                , elevationDemoSurface Elevation.z20 "20dp"
+                , elevationDemoSurface Elevation.z21 "21dp"
+                , elevationDemoSurface Elevation.z22 "22dp"
+                , elevationDemoSurface Elevation.z23 "23dp"
+                , elevationDemoSurface Elevation.z24 "24dp"
+                ]
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
+            ]
+        }
 
-                            1 ->
-                                Elevation.z1
 
-                            2 ->
-                                Elevation.z2
+style : String
+style =
+    """
+    .elevation-demo-container {
+      display: -ms-flexbox;
+      display: flex;
+      margin: auto;
+      -ms-flex: 1 1 auto;
+      flex: 1 1 auto;
+      -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      width: 100%;
+    }
 
-                            3 ->
-                                Elevation.z3
+    .elevation-hero .elevation-demo-surface {
+      width: 120px;
+      height: 48px;
+      margin: 24px;
+      background-color: #212121;
+      color: #f0f0f0;
+    }
 
-                            4 ->
-                                Elevation.z4
-
-                            5 ->
-                                Elevation.z5
-
-                            6 ->
-                                Elevation.z6
-
-                            7 ->
-                                Elevation.z7
-
-                            8 ->
-                                Elevation.z8
-
-                            9 ->
-                                Elevation.z9
-
-                            10 ->
-                                Elevation.z10
-
-                            11 ->
-                                Elevation.z11
-
-                            12 ->
-                                Elevation.z12
-
-                            13 ->
-                                Elevation.z13
-
-                            14 ->
-                                Elevation.z14
-
-                            15 ->
-                                Elevation.z15
-
-                            16 ->
-                                Elevation.z16
-
-                            17 ->
-                                Elevation.z17
-
-                            18 ->
-                                Elevation.z18
-
-                            19 ->
-                                Elevation.z19
-
-                            20 ->
-                                Elevation.z20
-
-                            21 ->
-                                Elevation.z21
-
-                            22 ->
-                                Elevation.z22
-
-                            23 ->
-                                Elevation.z23
-
-                            _ ->
-                                Elevation.z24
-                        , css "width" "200px"
-                        , css "height" "100px"
-                        , css "margin" "0 60px 80px"
-                        , css "color" "#9e9e9e"
-                        , css "font-size" "0.8em"
-                        , css "border-radius" "3px"
-                        , css "justify-content" "center"
-                        , css "align-items" "center"
-                        ]
-                        [ styled Html.figcaption
-                            [ css "display" "flex"
-                            ]
-                            [ text (String.fromInt z ++ "dp")
-                            , Html.br [] []
-                            , text ("(Material.Elevation.z" ++ String.fromInt z ++ ")")
-                            ]
-                        ]
-                )
-                (List.range 0 24)
-            )
-        ]
+    .elevation-demo-surface {
+      display: -ms-inline-flexbox;
+      display: inline-flex;
+      -ms-flex-pack: distribute;
+      justify-content: space-around;
+      min-height: 100px;
+      min-width: 200px;
+      margin: 15px;
+      -ms-flex-align: center;
+      align-items: center;
+    }
+    """
