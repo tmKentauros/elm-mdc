@@ -2,65 +2,29 @@ module Demo.Textfields exposing (Model, Msg(..), defaultModel, update, view)
 
 import Demo.Page as Page exposing (Page)
 import Dict exposing (Dict)
-import Html exposing (Html)
+import Html exposing (Html, text)
 import Html.Attributes as Html
 import Html.Events as Html
 import Material
 import Material.Options as Options exposing (cs, css, styled, when)
-import Material.Textfield as Textfield
-import Material.Textfield.HelperText as Textfield
+import Material.Textfield as TextField
+import Material.Textfield.HelperText as TextField
 import Material.Typography as Typography
 
 
 type alias Model m =
     { mdc : Material.Model m
-    , examples : Dict Material.Index Example
-    }
-
-
-type alias Example =
-    { disabled : Bool
-    , rtl : Bool
-    , dense : Bool
-    , required : Bool
-    , helperText : Bool
-    , persistent : Bool
-    , validationMsg : Bool
-    }
-
-
-defaultExample : Example
-defaultExample =
-    { disabled = False
-    , rtl = False
-    , dense = False
-    , required = False
-    , helperText = False
-    , persistent = False
-    , validationMsg = False
     }
 
 
 defaultModel : Model m
 defaultModel =
     { mdc = Material.defaultModel
-    , examples = Dict.empty
     }
 
 
 type Msg m
     = Mdc (Material.Msg m)
-    | ExampleMsg Material.Index ExampleMsg
-
-
-type ExampleMsg
-    = ToggleDisabled
-    | ToggleRtl
-    | ToggleDense
-    | ToggleRequired
-    | ToggleHelperText
-    | TogglePersistent
-    | ToggleValidationMsg
 
 
 update : (Msg m -> m) -> Msg m -> Model m -> ( Model m, Cmd m )
@@ -69,636 +33,529 @@ update lift msg model =
         Mdc msg_ ->
             Material.update (lift << Mdc) msg_ model
 
-        ExampleMsg index msg_ ->
-            let
-                examples =
-                    Dict.get index model.examples
-                        |> Maybe.withDefault defaultExample
-                        |> (\exampleState ->
-                                Dict.insert index
-                                    (updateExample msg_ exampleState)
-                                    model.examples
-                           )
-            in
-            ( { model | examples = examples }, Cmd.none )
-
-
-updateExample : ExampleMsg -> Example -> Example
-updateExample msg model =
-    case msg of
-        ToggleDisabled ->
-            { model | disabled = not model.disabled }
-
-        ToggleRtl ->
-            { model | rtl = not model.rtl }
-
-        ToggleDense ->
-            { model | dense = not model.dense }
-
-        ToggleRequired ->
-            { model | required = not model.required }
-
-        ToggleHelperText ->
-            { model | helperText = not model.helperText }
-
-        TogglePersistent ->
-            { model | persistent = not model.persistent }
-
-        ToggleValidationMsg ->
-            { model | validationMsg = not model.validationMsg }
-
 
 view : (Msg m -> m) -> Page m -> Model m -> Html m
 view lift page model =
-    page.body "Text fields"
-        [ Page.hero []
-            [ heroTextfield lift "text-fields-hero" model
+    page.demoPage
+        { title = "Text Field"
+        , prelude =
+            [ """
+          Text fields allow users to input, edit, and select text. Text fields
+          typically reside in forms but can appear in other places, like dialog
+          boxes and search.
+          """
             ]
-        , textfield lift "text-fields-default" model
-        , password lift "text-fields-password" model
-        , outlinedTextfield lift "text-fields-outlined" model
-        , boxTextfield lift "text-fields-box" model
-        , iconsTextfield lift "text-fields-icons" model
-        , textarea lift "text-fields-textarea" model
-        , fullwidth lift "text-fields-full-width" model
+        , resources =
+            { materialGuidelines = ""
+            , documentation = ""
+            , sourceCode = ""
+            }
+        , hero =
+            [ heroTextField lift model
+            ]
+        , content =
+            [ styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Filled" ]
+            , filledTextFields lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Filled with Leading Icon" ]
+            , filledTextFieldsWithLeadingIcon lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Filled with Trailing Icon" ]
+            , filledTextFieldsWithTrailingIcon lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Outlined" ]
+            , outlinedTextFields lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Outlined with Leading Icon" ]
+            , outlinedTextFieldsWithLeadingIcon lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Outlined with Trailing Icon" ]
+            , outlinedTextFieldsWithTrailingIcon lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Textarea" ]
+            , textareas lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Full Width" ]
+            , fullwidthTextFields lift model
+            , styled Html.h3
+                [ Typography.subtitle1 ]
+                [ text "Full Width Textarea" ]
+            , fullwidthTextareas lift model
+            , Html.node "style"
+                [ Html.type_ "text/css" ]
+                [ text style ]
+            ]
+        }
+
+
+style : String
+style =
+    """
+    .text-field-row {
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-align: start;
+      align-items: flex-start;
+      -ms-flex-pack: justify;
+      justify-content: space-between;
+      -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+    }
+
+    .text-field-container {
+      min-width: 200px;
+    }
+
+    .text-field-row-fullwidth {
+      display: block;
+    }
+
+    .text-field-row-fullwidth .text-field-container {
+      margin-bottom: 8px;
+    }
+    """
+
+
+heroTextField : (Msg m -> m) -> Model m -> Html m
+heroTextField lift model =
+    Html.div
+        [ Html.class "text-field-container"
+        ]
+        [ TextField.view (lift << Mdc)
+            "text-fields-hero-text-field"
+            model.mdc
+            [ TextField.label "Standard" ]
+            []
         ]
 
 
-heroTextfield : (Msg m -> m) -> Material.Index -> Model m -> Html m
-heroTextfield lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    Textfield.view (lift << Mdc)
-        index
-        model.mdc
-        [ Textfield.label "Text field"
+filledTextFields : (Msg m -> m) -> Model m -> Html m
+filledTextFields lift model =
+    Html.div
+        [ Html.class "text-field-row"
         ]
-        []
-
-
-textfield : (Msg m -> m) -> Material.Index -> Model m -> Html m
-textfield lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text
-                "Full Functionality Component (Floating Label, Validation)"
+        [ Html.div
+            [ Html.class "text-field-container"
             ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field"
+                model.mdc
+                [ TextField.label "Standard" ]
+                []
             ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Textfield.label "Email Address"
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    , Textfield.required |> when state.required
-                    ]
-                    []
-                , Textfield.helperText
-                    [ Textfield.persistent |> when state.persistent
-                    , Textfield.validationMsg |> when state.validationMsg
-                    , css "display" "none" |> when (not state.helperText)
-                    ]
-                    [ Html.text "Help Text (possibly validation message)"
-                    ]
-                ]
+        , Html.div
+            [ Html.class "text-field-container"
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-filled-text-field"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.dense
                 ]
                 []
-            , Html.label [] [ Html.text " Disabled" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field-with-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
                 ]
                 []
-            , Html.label [] [ Html.text " RTL" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
-                ]
-                []
-            , Html.label [] [ Html.text " Dense" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRequired))
-                , Html.checked state.required
-                ]
-                []
-            , Html.label [] [ Html.text " Required" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleHelperText))
-                , Html.checked state.helperText
-                ]
-                []
-            , Html.label [] [ Html.text " Use Helper Text" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index TogglePersistent))
-                , Html.checked state.persistent
-                , Html.disabled (not state.helperText)
-                ]
-                []
-            , styled Html.label
-                [ css "opacity" ".4" |> when (not state.helperText)
-                ]
-                [ Html.text " Make helper text persistent"
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleValidationMsg))
-                , Html.checked state.validationMsg
-                , Html.disabled (not state.helperText)
-                ]
-                []
-            , styled Html.label
-                [ css "opacity" ".4" |> when (not state.helperText)
-                ]
-                [ Html.text " Use helper text as validation message"
-                ]
-            ]
-        ]
-
-
-password : (Msg m -> m) -> Material.Index -> Model m -> Html m
-password lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text "Password field with validation"
-            ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Textfield.label "Choose password"
-                    , Textfield.password
-                    , Textfield.pattern ".{8,}"
-                    , Textfield.required
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    ]
-                    []
-                , Textfield.helperText
-                    [ Textfield.persistent
-                    , Textfield.validationMsg
-                    ]
-                    [ Html.text "Must be at least 8 characters long"
-                    ]
+            , TextField.helperText
+                [ TextField.persistent ]
+                [ text "Helper Text"
                 ]
             ]
         ]
 
 
-outlinedTextfield : (Msg m -> m) -> Material.Index -> Model m -> Html m
-outlinedTextfield lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text "Outlined Text Field"
-            ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Textfield.label "Your Name"
-                    , Textfield.outlined
-                    , Textfield.dense |> when state.dense
-                    , Textfield.disabled |> when state.disabled
-                    ]
-                    []
-                , Textfield.helperText
-                    [ Textfield.persistent |> when state.persistent
-                    , Textfield.validationMsg |> when state.validationMsg
-                    ]
-                    [ Html.text "Must be at least 8 characters"
-                    ]
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
-                ]
-                []
-            , Html.label [] [ Html.text " Disabled" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
-                ]
-                []
-            , Html.label [] [ Html.text " RTL" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
-                ]
-                []
-            , Html.label [] [ Html.text " Dense" ]
-            ]
+filledTextFieldsWithLeadingIcon : (Msg m -> m) -> Model m -> Html m
+filledTextFieldsWithLeadingIcon lift model =
+    Html.div
+        [ Html.class "text-field-row"
         ]
-
-
-boxTextfield : (Msg m -> m) -> Material.Index -> Model m -> Html m
-boxTextfield lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text "Textfield box"
+        [ Html.div
+            [ Html.class "text-field-container"
             ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Textfield.label "Your Name"
-                    , Textfield.box
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    ]
-                    []
-                , Textfield.helperText
-                    [ Textfield.persistent |> when state.persistent
-                    , Textfield.validationMsg |> when state.validationMsg
-                    ]
-                    [ Html.text "Must provide a name"
-                    ]
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field-with-leading-icon"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.leadingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " Disabled" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-filled-text-field-with-leading-icon"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.dense
+                , TextField.leadingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " RTL" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field-with-leading-icon-and-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.leadingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " Dense" ]
-            ]
-        ]
-
-
-iconsTextfield : (Msg m -> m) -> Material.Index -> Model m -> Html m
-iconsTextfield lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text
-                "Text Field - Leading/Trailing icons"
-            ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    (index ++ "-your-name")
-                    model.mdc
-                    [ Textfield.label "Your name"
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    , Textfield.required |> when state.required
-                    , Textfield.box
-                    , Textfield.leadingIcon "event"
-                    ]
-                    []
+            , TextField.helperText
+                [ TextField.persistent
                 ]
-            , Html.div []
-                [ Textfield.view (lift << Mdc)
-                    (index ++ "-your-other-name")
-                    model.mdc
-                    [ Textfield.label "Your other name"
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    , Textfield.required |> when state.required
-                    , Textfield.box
-                    , Textfield.trailingIcon "delete"
-                    ]
-                    []
-                ]
-            , Html.div []
-                [ Textfield.view (lift << Mdc)
-                    (index ++ "-your-other-name-2")
-                    model.mdc
-                    [ Textfield.label "Your other name"
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    , Textfield.required |> when state.required
-                    , Textfield.outlined
-                    , Textfield.leadingIcon "event"
-                    ]
-                    []
-                ]
-            , Html.div []
-                [ Textfield.view (lift << Mdc)
-                    (index ++ "-your-other-name-3")
-                    model.mdc
-                    [ Textfield.label "Your other name"
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    , Textfield.required |> when state.required
-                    , Textfield.outlined
-                    , Textfield.trailingIcon "delete"
-                    ]
-                    []
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
-                ]
-                []
-            , Html.label [] [ Html.text " Disabled" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
-                ]
-                []
-            , Html.label [] [ Html.text " RTL" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
-                ]
-                []
-            , Html.label [] [ Html.text " Dense" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRequired))
-                , Html.checked state.required
-                ]
-                []
-            , Html.label [] [ Html.text " Required" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleHelperText))
-                , Html.checked state.helperText
-                ]
-                []
-            , Html.label [] [ Html.text " Use Helper Text" ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index TogglePersistent))
-                , Html.checked state.persistent
-                , Html.disabled (not state.helperText)
-                ]
-                []
-            , styled Html.label
-                [ css "opacity" ".4" |> when (not state.helperText)
-                ]
-                [ Html.text " Make helper text persistent"
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleValidationMsg))
-                , Html.checked state.validationMsg
-                , Html.disabled (not state.helperText)
-                ]
-                []
-            , styled Html.label
-                [ css "opacity" ".4" |> when (not state.helperText)
-                ]
-                [ Html.text " Use helper text as validation message"
+                [ text "Helper Text"
                 ]
             ]
         ]
 
 
-textarea : (Msg m -> m) -> Material.Index -> Model m -> Html m
-textarea lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text "Textarea"
+filledTextFieldsWithTrailingIcon : (Msg m -> m) -> Model m -> Html m
+filledTextFieldsWithTrailingIcon lift model =
+    Html.div
+        [ Html.class "text-field-row"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
             ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    index
-                    model.mdc
-                    [ Textfield.label "Multi-line Label"
-                    , Textfield.textarea
-                    , Textfield.rows 8
-                    , Textfield.cols 40
-                    , Textfield.disabled |> when state.disabled
-                    , Textfield.dense |> when state.dense
-                    ]
-                    []
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field-with-trailing-icon"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.trailingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " Disabled" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-filled-text-field-with-trailing-icon"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.dense
+                , TextField.trailingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " RTL" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-filled-text-field-with-trailing-icon-and-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.trailingIcon "event"
                 ]
                 []
-            , Html.label [] [ Html.text " Dense" ]
+            , TextField.helperText
+                [ TextField.persistent
+                ]
+                [ text "Helper Text"
+                ]
             ]
         ]
 
 
-fullwidth : (Msg m -> m) -> Material.Index -> Model m -> Html m
-fullwidth lift index model =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
-    example []
-        [ Html.h2 []
-            [ Html.text "Full-Width Text Field and Textarea"
+outlinedTextFields : (Msg m -> m) -> Model m -> Html m
+outlinedTextFields lift model =
+    Html.div
+        [ Html.class "text-field-row"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
             ]
-        , styled Html.section
-            [ Options.attribute (Html.dir "rtl") |> when state.rtl
-            ]
-            [ Html.div []
-                [ Textfield.view (lift << Mdc)
-                    (index ++ "-subject")
-                    model.mdc
-                    [ Textfield.placeholder "Subject"
-                    , Textfield.fullwidth
-                    ]
-                    []
-                , Textfield.view (lift << Mdc)
-                    (index ++ "-textarea")
-                    model.mdc
-                    [ Textfield.placeholder "Textarea Label"
-                    , Textfield.textarea
-                    , Textfield.fullwidth
-                    , Textfield.rows 8
-                    , Textfield.cols 40
-                    , css "margin-top" "16px"
-                    ]
-                    []
-                ]
-            ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDisabled))
-                , Html.checked state.disabled
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
                 ]
                 []
-            , Html.label [] [ Html.text " Disabled" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleRtl))
-                , Html.checked state.rtl
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-outlined-text-field"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.outlined
+                , TextField.dense
                 ]
                 []
-            , Html.label [] [ Html.text " RTL" ]
             ]
-        , styled Html.div
-            []
-            [ checkbox
-                [ Html.onClick (lift (ExampleMsg index ToggleDense))
-                , Html.checked state.dense
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field-with-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
                 ]
                 []
-            , Html.label [] [ Html.text " Dense" ]
+            , TextField.helperText
+                [ TextField.persistent ]
+                [ text "Helper Text"
+                ]
             ]
         ]
 
 
-example : List (Options.Property c m) -> List (Html m) -> Html m
-example options =
-    styled Html.div
-        (css "padding" "24px"
-            :: css "margin" "24px"
-            :: options
-        )
+outlinedTextFieldsWithLeadingIcon : (Msg m -> m) -> Model m -> Html m
+outlinedTextFieldsWithLeadingIcon lift model =
+    Html.div
+        [ Html.class "text-field-row"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field-with-leading-icon"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
+                , TextField.leadingIcon "event"
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-outlined-text-field-with-leading-icon"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.outlined
+                , TextField.dense
+                , TextField.leadingIcon "event"
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field-with-leading-icon-and-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
+                , TextField.leadingIcon "event"
+                ]
+                []
+            , TextField.helperText
+                [ TextField.persistent
+                ]
+                [ text "Helper Text"
+                ]
+            ]
+        ]
 
 
-h2 : List (Options.Property () m) -> List (Html m) -> Html m
-h2 options =
-    styled Html.h2
-        (css "margin-top" "20px"
-            :: css "margin-bottom" "20px"
-            :: Typography.title
-            :: options
-        )
+outlinedTextFieldsWithTrailingIcon : (Msg m -> m) -> Model m -> Html m
+outlinedTextFieldsWithTrailingIcon lift model =
+    Html.div
+        [ Html.class "text-field-row"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field-with-trailing-icon"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
+                , TextField.trailingIcon "event"
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-outlined-text-field-with-trailing-icon"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.outlined
+                , TextField.dense
+                , TextField.trailingIcon "event"
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-outlined-text-field-with-trailing-icon-and-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.outlined
+                , TextField.trailingIcon "event"
+                ]
+                []
+            , TextField.helperText
+                [ TextField.persistent
+                ]
+                [ text "Helper Text"
+                ]
+            ]
+        ]
 
 
-checkbox : List (Html.Attribute m) -> List (Html m) -> Html m
-checkbox options =
-    Html.input
-        (Html.type_ "checkbox"
-            :: options
-        )
+textareas : (Msg m -> m) -> Model m -> Html m
+textareas lift model =
+    Html.div
+        [ Html.class "text-field-row"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-textarea-text-field"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.textarea
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-textarea-text-field"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.textarea
+                , TextField.dense
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-textarea-text-field-with-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.textarea
+                ]
+                []
+            , TextField.helperText
+                [ TextField.persistent ]
+                [ text "Helper Text"
+                ]
+            ]
+        ]
+
+
+fullwidthTextFields : (Msg m -> m) -> Model m -> Html m
+fullwidthTextFields lift model =
+    Html.div
+        [ Html.class "text-field-row text-field-row-fullwidth"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-fullwidth-text-field"
+                model.mdc
+                [ TextField.placeholder "Standard"
+                , TextField.fullwidth
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-fullwidth-text-field"
+                model.mdc
+                [ TextField.placeholder "Dense"
+                , TextField.fullwidth
+                , TextField.dense
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-fullwidth-text-field-with-helper-text"
+                model.mdc
+                [ TextField.placeholder "Standard"
+                , TextField.fullwidth
+                ]
+                []
+            , TextField.helperText
+                [ TextField.persistent ]
+                [ text "Helper Text"
+                ]
+            ]
+        ]
+
+
+fullwidthTextareas : (Msg m -> m) -> Model m -> Html m
+fullwidthTextareas lift model =
+    Html.div
+        [ Html.class "text-field-row text-field-row-fullwidth"
+        ]
+        [ Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-fullwidth-textarea-text-field"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.fullwidth
+                , TextField.textarea
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-dense-fullwidth-textarea-text-field"
+                model.mdc
+                [ TextField.label "Dense"
+                , TextField.fullwidth
+                , TextField.textarea
+                , TextField.dense
+                ]
+                []
+            ]
+        , Html.div
+            [ Html.class "text-field-container"
+            ]
+            [ TextField.view (lift << Mdc)
+                "text-fields-fullwidth-textarea-text-field-with-helper-text"
+                model.mdc
+                [ TextField.label "Standard"
+                , TextField.fullwidth
+                , TextField.textarea
+                ]
+                []
+            , TextField.helperText
+                [ TextField.persistent ]
+                [ text "Helper Text"
+                ]
+            ]
+        ]
