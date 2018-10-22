@@ -1,4 +1,12 @@
-module Demo.TopAppBar exposing (Model, Msg(..), defaultModel, subscriptions, update, view)
+module Demo.TopAppBar
+    exposing
+        ( Model
+        , Msg(..)
+        , defaultModel
+        , subscriptions
+        , update
+        , view
+        )
 
 import Demo.Page as Page exposing (Page)
 import Demo.Url as Url exposing (TopAppBarPage)
@@ -9,40 +17,22 @@ import Material
 import Material.Button as Button
 import Material.Options as Options exposing (Property, cs, css, styled, when)
 import Material.TopAppBar as TopAppBar
+import Material.Typography as Typography
 
 
 type alias Model m =
     { mdc : Material.Model m
-    , examples : Dict Material.Index Example
-    }
-
-
-type alias Example =
-    { rtl : Bool
-    }
-
-
-defaultExample : Example
-defaultExample =
-    { rtl = False
     }
 
 
 defaultModel : Model m
 defaultModel =
     { mdc = Material.defaultModel
-    , examples = Dict.empty
     }
 
 
 type Msg m
     = Mdc (Material.Msg m)
-    | ExampleMsg Material.Index ExampleMsg
-
-
-type ExampleMsg
-    = ToggleRtl
-    | OpenDrawer
 
 
 update : (Msg m -> m) -> Msg m -> Model m -> ( Model m, Cmd m )
@@ -51,27 +41,10 @@ update lift msg model =
         Mdc msg_ ->
             Material.update (lift << Mdc) msg_ model
 
-        ExampleMsg index msg_ ->
-            let
-                example =
-                    Dict.get (Debug.log "index" index) model.examples
-                        |> Maybe.withDefault defaultExample
-                        |> updateExample msg_
 
-                examples =
-                    Dict.insert index example model.examples
-            in
-            ( { model | examples = examples }, Cmd.none )
-
-
-updateExample : ExampleMsg -> Example -> Example
-updateExample msg model =
-    case Debug.log "updateExample" msg of
-        ToggleRtl ->
-            { model | rtl = not model.rtl }
-
-        OpenDrawer ->
-            model
+subscriptions : (Msg m -> m) -> Model m -> Sub m
+subscriptions lift model =
+    Material.subscriptions (lift << Mdc) model
 
 
 view : (Msg m -> m) -> Page m -> Maybe TopAppBarPage -> Model m -> Html m
@@ -96,14 +69,24 @@ view lift page topAppBarPage model =
             shortCollapsedTopAppBar lift "top-app-bar-short-collapsed" model
 
         Nothing ->
-            page.body "TopAppBar"
-                [ Page.hero []
-                    [ styled Html.div
-                        [ css "width" "480px"
-                        , css "height" "72px"
-                        ]
+            page.demoPage
+                { title = "TopAppBar"
+                , prelude =
+                    [ """
+                      Top App Bars are a container for items such as
+                      application title, navigation icon, and action items.
+                      """
+                    ]
+                , resources =
+                    { materialGuidelines = ""
+                    , documentation = ""
+                    , sourceCode = ""
+                    }
+                , hero =
+                    [ Html.div
+                        [ Html.class "hero-top-app-bar" ]
                         [ TopAppBar.view (lift << Mdc)
-                            "top-app-bar-default-top-app-bar"
+                            "top-app-bar-hero-top-app-bar"
                             model.mdc
                             [ css "position" "static"
                             ]
@@ -111,7 +94,7 @@ view lift page topAppBarPage model =
                                 [ TopAppBar.alignStart
                                 ]
                                 [ TopAppBar.navigationIcon [] "menu"
-                                , TopAppBar.title [] [ text "Title" ]
+                                , TopAppBar.title [] [ text "San Francisco" ]
                                 ]
                             , TopAppBar.section
                                 [ TopAppBar.alignEnd
@@ -123,22 +106,59 @@ view lift page topAppBarPage model =
                             ]
                         ]
                     ]
-                , styled Html.div
-                    [ cs "mdc-topappbar-demo"
-                    , css "display" "flex"
-                    , css "flex-flow" "row wrap"
+                , content =
+                    [ Html.div
+                        [ Html.class "demos-display" ]
+                        [ iframe lift model "Standard" Url.StandardTopAppBar
+                        , iframe lift model "Fixed" Url.FixedTopAppBar
+                        , iframe lift model "Dense" Url.DenseTopAppBar
+                        , iframe lift model "Prominent" Url.ProminentTopAppBar
+                        , iframe lift model "Short" Url.ShortTopAppBar
+                        , iframe lift
+                            model
+                            "Short - Always Collapsed"
+                            Url.ShortCollapsedTopAppBar
+                        ]
+                    , Html.node "style"
+                        [ Html.type_ "text/css" ]
+                        [ text style ]
                     ]
-                    [ iframe lift model "Standard TopAppBar" Url.StandardTopAppBar
-                    , iframe lift model "Fixed TopAppBar" Url.FixedTopAppBar
-                    , iframe lift model "Dense TopAppBar" Url.DenseTopAppBar
-                    , iframe lift model "Prominent TopAppBar" Url.ProminentTopAppBar
-                    , iframe lift model "Short TopAppBar" Url.ShortTopAppBar
-                    , iframe lift
-                        model
-                        "Short - Always Closed TopAppBar"
-                        Url.ShortCollapsedTopAppBar
-                    ]
-                ]
+                }
+
+
+style : String
+style =
+    """
+    .hero-top-app-bar {
+      height: 64px;
+      width: 80%;
+      min-width: 300px;
+    }
+
+    .demos-display {
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-wrap: wrap;
+      flex-wrap: wrap;
+      min-height: 200px;
+    }
+
+    .demo {
+      display: inline-block;
+      -ms-flex: 1 1 45%;
+      flex: 1 1 45%;
+      -ms-flex-pack: distribute;
+      justify-content: space-around;
+      min-height: 200px;
+      min-width: 400px;
+      padding: 15px;
+    }
+
+    .frame {
+      width: 100%;
+      height: 200px;
+    }
+    """
 
 
 iframe : (Msg m -> m) -> Model m -> String -> TopAppBarPage -> Html m
@@ -148,79 +168,62 @@ iframe lift model title topAppBarPage =
             (++) "https://aforemny.github.io/elm-mdc/" <|
                 Url.toString (Url.TopAppBar (Just topAppBarPage))
     in
-    styled Html.div
-        [ css "display" "flex"
-        , css "flex-flow" "column"
-        , css "margin" "24px"
-        , css "width" "320px"
-        , css "height" "600px"
-        ]
-        [ styled Html.h2
-            [ cs "demo-topappbar-example-heading"
-            , css "font-size" "24px"
-            , css "margin-bottom" "16px"
-            , css "font-family" "Roboto, sans-serif"
-            , css "font-size" "2.8125rem"
-            , css "line-height" "3rem"
-            , css "font-weight" "400"
-            , css "letter-spacing" "normal"
-            , css "text-transform" "inherit"
-            ]
-            [ styled Html.span
-                [ cs "demo-topappbar-example-heading__text"
-                , css "flex-grow" "1"
-                , css "margin-right" "16px"
-                ]
-                [ text title ]
-            ]
-        , Html.p []
-            [ Html.a
-                [ Html.href url
-                , Html.target "_blank"
-                ]
-                [ text "View in separate window"
+    Html.div
+        [ Html.class "demo" ]
+        [ Html.div []
+            [ styled Html.h3
+                [ Typography.subtitle1 ]
+                [ Html.a
+                    [ Html.href url
+                    , Html.target "_blank"
+                    ]
+                    [ text title ]
                 ]
             ]
-        , styled Html.iframe
-            [ Options.attribute (Html.src url)
-            , css "border" "1px solid #eee"
-            , css "height" "500px"
-            , css "font-size" "16px"
-            , css "overflow" "scroll"
+        , Html.div []
+            [ Html.iframe
+                [ Html.class "frame"
+                , Html.src url
+                , Html.title title
+                ]
+                []
             ]
-            []
         ]
 
 
 topAppBarWrapper :
-    (Msg m -> m)
-    -> Material.Index
-    -> Model m
-    -> List (Property c m)
+    List (Property c m)
     -> Html m
     -> Html m
-topAppBarWrapper lift index model options topappbar =
-    let
-        state =
-            Dict.get index model.examples
-                |> Maybe.withDefault defaultExample
-    in
+topAppBarWrapper fixedAdjust topAppBar =
     styled Html.div
-        [ cs "mdc-topappbar-demo"
-        , Options.attribute (Html.dir "rtl") |> when state.rtl
+        [ cs "top-app-bar__frame"
+        , Typography.typography
         ]
-        [ topappbar
-        , body options lift index model
+        [ Html.div
+            [ Html.class "demo-frame" ]
+            [ topAppBar
+            , styled Html.div
+                fixedAdjust
+                [ body
+                ]
+            ]
+        , Html.node "style"
+            [ Html.type_ "text/css" ]
+            [ text
+                """
+                .top-app-bar__frame {
+                  height: 200vh;
+                }
+                """
+            ]
         ]
 
 
 standardTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 standardTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.fixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.fixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -229,7 +232,7 @@ standardTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
+                , TopAppBar.title [] [ text "Standard" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -244,11 +247,8 @@ standardTopAppBar lift index model =
 
 fixedTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 fixedTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.fixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.fixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -258,7 +258,7 @@ fixedTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
+                , TopAppBar.title [] [ text "Fixed" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -269,48 +269,12 @@ fixedTopAppBar lift index model =
                 ]
             ]
         )
-
-
-menuTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
-menuTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.fixedAdjust
-        ]
-        (TopAppBar.view (lift << Mdc)
-            index
-            model.mdc
-            [ TopAppBar.fixed
-            ]
-            [ TopAppBar.section
-                [ TopAppBar.alignStart
-                ]
-                [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
-                ]
-            , TopAppBar.section
-                [ TopAppBar.alignEnd
-                ]
-                [ TopAppBar.actionItem [] "file_download"
-                , TopAppBar.actionItem [] "print"
-                , TopAppBar.actionItem [] "bookmark"
-                ]
-            ]
-        )
-
-
-
--- , viewDrawer
 
 
 denseTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 denseTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.denseFixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.denseFixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -320,7 +284,7 @@ denseTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
+                , TopAppBar.title [] [ text "Dense" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -335,11 +299,8 @@ denseTopAppBar lift index model =
 
 prominentTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 prominentTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.prominentFixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.prominentFixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -349,7 +310,7 @@ prominentTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
+                , TopAppBar.title [] [ text "Prominent" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -364,11 +325,8 @@ prominentTopAppBar lift index model =
 
 shortTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 shortTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.fixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.fixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -379,7 +337,7 @@ shortTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
+                , TopAppBar.title [] [ text "Short" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -392,11 +350,8 @@ shortTopAppBar lift index model =
 
 shortCollapsedTopAppBar : (Msg m -> m) -> Material.Index -> Model m -> Html m
 shortCollapsedTopAppBar lift index model =
-    topAppBarWrapper lift
-        index
-        model
-        [ TopAppBar.fixedAdjust
-        ]
+    topAppBarWrapper
+        [ TopAppBar.fixedAdjust ]
         (TopAppBar.view (lift << Mdc)
             index
             model.mdc
@@ -408,7 +363,6 @@ shortCollapsedTopAppBar lift index model =
                 [ TopAppBar.alignStart
                 ]
                 [ TopAppBar.navigationIcon [] "menu"
-                , TopAppBar.title [] [ text "Title" ]
                 ]
             , TopAppBar.section
                 [ TopAppBar.alignEnd
@@ -419,37 +373,21 @@ shortCollapsedTopAppBar lift index model =
         )
 
 
-body : List (Options.Property c m) -> (Msg m -> m) -> Material.Index -> Model m -> Html m
-body options lift index model =
-    styled Html.div
-        options
-        (List.concat
-            [ [ Button.view (lift << Mdc)
-                    (index ++ "-toggle-rtl")
-                    model.mdc
-                    [ Button.outlined
-                    , Button.dense
-                    , Options.onClick (lift (ExampleMsg (index ++ "-toggle-rtl") ToggleRtl))
-                    ]
-                    [ text "Toggle RTL"
-                    ]
-              ]
-            , List.repeat 18 <|
-                Html.p []
-                    [ text """
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac
-turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor
-sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies
-mi vitae est. Pellentesque habitant morbi tristique senectus et netus et
-malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae,
-ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas
-semper. Aenean ultricies mi vitae est.
-    """
-                    ]
-            ]
+body : Html m
+body =
+    Html.div []
+        (List.repeat 4 <|
+            Html.p []
+                [ text
+                    """
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                    sed do eiusmod tempor incididunt ut labore et dolore magna
+                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Duis aute irure dolor in reprehenderit in voluptate velit
+                    esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+                    occaecat cupidatat non proident, sunt in culpa qui officia
+                    deserunt mollit anim id est laborum.
+                    """
+                ]
         )
-
-
-subscriptions : (Msg m -> m) -> Model m -> Sub m
-subscriptions lift model =
-    Material.subscriptions (lift << Mdc) model
