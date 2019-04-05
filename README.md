@@ -65,7 +65,7 @@ on `<body>`:
 
 ### Elm dependencies
 
-This library depends on some packages. Please install the following.
+Please install the following packages.
 
 ```cmd
 elm install elm/json
