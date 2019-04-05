@@ -18,6 +18,8 @@ which uses the now
 
 ## Usage
 
+### Some imports
+
 This library depends on an external JavaScript asset `elm-mdc.js` which you
 have to require in your `index.html`. This library currently support MDC Web
 v0.37.1. Both assets, `elm-mdc.js`, and `material-components-web.css` are
@@ -29,15 +31,22 @@ Include `elm-mdc.js` before you include `elm.js`:
 <body>
   <script src="elm-mdc.js"></script>
   <script src="elm.js"></script>
+</body>
 ```
 
 We recommend that you include the following resources as well:
 
 ```html
 <head>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css" rel="stylesheet">
-  <link href="material-components-web.css" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css"
+    rel="stylesheet"
+  />
+  <link href="material-components-web.css" rel="stylesheet" />
 </head>
 ```
 
@@ -46,10 +55,23 @@ on `<body>`:
 
 ```html
 <head>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+    rel="stylesheet"
+  />
 </head>
-<body class="mdc-typography">
-</body>
+<body class="mdc-typography"></body>
+```
+
+### Elm dependencies
+
+Please install the following packages.
+
+```cmd
+elm install elm/json
+elm install elm/regex
+elm install elm/svg
+elm install truqu/elm-md5
 ```
 
 ## Example application
